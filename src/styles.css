@@ -19,6 +19,11 @@
  */
 
 @theme inline {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --color-teal: var(--teal);
+  --color-green: var(--green);
+  --color-amber: var(--amber);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -62,26 +67,31 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --radius: 0.5rem;
+  --background: oklch(0.995 0.002 240);
+  --foreground: oklch(0.24 0.03 250);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: oklch(0.24 0.03 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
+  --popover-foreground: oklch(0.24 0.03 250);
+  --primary: oklch(0.5 0.14 245);
+  --primary-foreground: oklch(0.99 0.005 240);
+  --secondary: oklch(0.965 0.012 230);
+  --secondary-foreground: oklch(0.32 0.05 245);
+  --muted: oklch(0.968 0.008 235);
+  --muted-foreground: oklch(0.52 0.025 250);
+  --accent: oklch(0.95 0.03 190);
+  --accent-foreground: oklch(0.3 0.06 220);
+  --destructive: oklch(0.55 0.21 27);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --border: oklch(0.916 0.012 240);
+  --input: oklch(0.916 0.012 240);
+  --ring: oklch(0.6 0.1 220);
+  --teal: oklch(0.62 0.11 195);
+  --green: oklch(0.62 0.13 155);
+  --amber: oklch(0.72 0.15 75);
+  --gradient-brand: linear-gradient(90deg, oklch(0.5 0.14 245), oklch(0.62 0.11 195), oklch(0.62 0.13 155));
+  --shadow-panel: 0 1px 2px oklch(0.24 0.03 250 / 6%), 0 8px 24px -16px oklch(0.24 0.03 250 / 25%);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -140,5 +150,25 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@utility brand-gradient {
+  background-image: var(--gradient-brand);
+}
+
+@utility panel {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+}
+
+@layer base {
+  .leaflet-container {
+    font-family: var(--font-sans);
+    background: oklch(0.97 0.01 230);
   }
 }
