@@ -1,24 +1,151 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { MapPanel } from "@/components/aegis/MapPanel";
+import { PriorityPill, SectionTitle, StatCard, StatusBadge } from "@/components/aegis/ui";
+import { FLOOD_ZONES, priorityScore } from "@/lib/aegis/data";
+import { useAegis } from "@/lib/aegis/store";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Aegis Bharat — National Disaster Response Command Centre" },
+      {
+        name: "description",
+        content:
+          "Live command centre for Indian flood response: SOS triage, priority scoring, resource allocation, safe routing and relief camps.",
+      },
+      { property: "og:title", content: "Aegis Bharat — Disaster Response Command Centre" },
+      {
+        property: "og:description",
+        content: "Unified flood prediction, SOS triage, resource allocation and relief camp operations for India.",
+      },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const { sosList, resources, camps, online, lastSync } = useAegis();
+  const open = sosList.filter((s) => s.status === "NEW" || s.status === "TRIAGED");
+  const critical = sosList.filter((s) => priorityScore(s.factors) >= 85);
+  const awaiting = open.reduce((n, s) => n + s.people, 0);
+  const available = resources.filter((r) => r.availability === "AVAILABLE");
+  const deployed = resources.filter((r) => r.availability === "ENGAGED");
+  const occupancy = camps.reduce((n, c) => n + c.occupancy, 0);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="space-y-6">
+      <div className="panel p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+              National Emergency Operations Centre
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
+              Monsoon Flood Response — Live Command Centre
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Kerala, Assam, Bihar, Odisha, West Bengal, Uttarakhand, Maharashtra and Gujarat sectors under
+              active watch. All dispatch actions require controller confirmation.
+            </p>
+          </div>
+          <div className="text-right text-xs text-muted-foreground">
+            <p>Operational status</p>
+            <p className={`text-sm font-semibold ${online ? "text-[oklch(0.42_0.11_155)]" : "text-[oklch(0.45_0.13_75)]"}`}>
+              {online ? "ONLINE · all feeds nominal" : "DEGRADED · cached plan active"}
+            </p>
+            <p className="mt-1">Last sync {lastSync}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-8">
+        <StatCard label="Active SOS" value={open.length} sub="awaiting allocation" tone="critical" />
+        <StatCard label="Critical" value={critical.length} sub="priority ≥ 85" tone="critical" />
+        <StatCard label="Flood-risk zones" value={FLOOD_ZONES.length} sub="2 severe · 2 high" tone="warn" />
+        <StatCard label="Available resources" value={available.length} sub="verified & ready" tone="good" />
+        <StatCard label="Deployed" value={deployed.length} sub="engaged in operations" />
+        <StatCard label="Awaiting rescue" value={awaiting} sub="persons in open requests" tone="critical" />
+        <StatCard label="Relief camps" value={camps.length} sub={`${occupancy} persons sheltered`} tone="good" />
+        <StatCard
+          label="Connectivity"
+          value={online ? "ONLINE" : "DEGRADED"}
+          sub={online ? "Realtime sync active" : "Cached plan in use"}
+          tone={online ? "good" : "warn"}
+        />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+        <div className="panel p-4">
+          <SectionTitle
+            title="Operational map — India"
+            desc="Leaflet + OpenStreetMap · flood zones, SOS, resources, camps, hospitals, shelters, rivers, blocked roads and the confirmed safe route."
+            right={
+              <Link to="/map" className="text-xs font-semibold text-primary hover:underline">
+                Open full GIS view →
+              </Link>
+            }
+          />
+          <MapPanel height={520} />
+        </div>
+
+        <div className="space-y-6">
+          <div className="panel p-4">
+            <SectionTitle title="Priority queue" desc="Highest scoring open requests" />
+            <ul className="space-y-3">
+              {open
+                .slice()
+                .sort((a, b) => priorityScore(b.factors) - priorityScore(a.factors))
+                .slice(0, 5)
+                .map((s) => (
+                  <li key={s.id} className="rounded-md border border-border p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold">SOS {s.id}</span>
+                      <PriorityPill factors={s.factors} />
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {s.place}, {s.state}
+                    </p>
+                    <p className="mt-1 text-xs">
+                      {s.people} persons · {s.children + s.elderly + s.disabled} vulnerable · {s.floodDepthM} m
+                      depth
+                    </p>
+                    <div className="mt-2 flex items-center justify-between">
+                      <StatusBadge status={s.status} />
+                      <Link to="/allocation" className="text-xs font-semibold text-primary hover:underline">
+                        Review allocation →
+                      </Link>
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          </div>
+
+          <div className="panel p-4">
+            <SectionTitle title="Flood prediction watch" desc="CWC gauge + IMD rainfall model output" />
+            <ul className="space-y-2 text-xs">
+              {FLOOD_ZONES.map((z) => (
+                <li key={z.id} className="flex items-start justify-between gap-3 border-b border-border pb-2 last:border-0">
+                  <div>
+                    <p className="font-medium text-foreground">{z.name}</p>
+                    <p className="text-muted-foreground">{z.forecast}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded px-2 py-0.5 font-semibold ${
+                      z.risk === "SEVERE"
+                        ? "bg-destructive/10 text-destructive"
+                        : z.risk === "HIGH"
+                          ? "bg-amber/20 text-[oklch(0.45_0.13_75)]"
+                          : "bg-teal/15 text-[oklch(0.42_0.09_195)]"
+                    }`}
+                  >
+                    {Math.round(z.probability * 100)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
