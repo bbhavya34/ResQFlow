@@ -1,25 +1,35 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+"use client";
 
-export const Route = createFileRoute("/demo")({
+import Link from "next/link";
+import { definePage } from "@/lib/page-definition";
+
+export const Route = definePage("/demo")({
   head: () => ({
     meta: [
       { title: "End-to-End Demo Run — Aegis Bharat" },
       {
         name: "description",
         content:
-          "Walk the full chain: flood prediction, SOS intake, priority 92, resource match, safe route, human confirmation, offline continuity, rescue and camp update.",
+          "Walk the prototype chain: risk feed, SOS intake, priority 92, resource match, safe route, human confirmation, offline continuity, rescue and camp update.",
       },
       { property: "og:title", content: "End-to-End Demo Run — Aegis Bharat" },
-      { property: "og:description", content: "The complete Indian flood response workflow in ten steps." },
+      {
+        property: "og:description",
+        content: "The complete Indian flood response workflow in ten steps.",
+      },
     ],
   }),
   component: DemoPage,
 });
 
-const STEPS: { t: string; d: string; to?: "/" | "/sos" | "/allocation" | "/map" | "/offline" | "/field" | "/camps" }[] = [
+const STEPS: {
+  t: string;
+  d: string;
+  to?: "/" | "/sos" | "/allocation" | "/map" | "/offline" | "/field" | "/camps";
+}[] = [
   {
-    t: "1 · Flood detected",
-    d: "Periyar basin model returns 91% severe-flood probability after Idukki shutter release. Aluva–Ernakulam sector escalated to SEVERE.",
+    t: "1 · Flood alert received",
+    d: "The demo risk feed reports a severe Periyar basin alert after an Idukki shutter release. Aluva–Ernakulam is escalated to SEVERE.",
     to: "/",
   },
   {
@@ -39,7 +49,7 @@ const STEPS: { t: string; d: string; to?: "/" | "/sos" | "/allocation" | "/map" 
   },
   {
     t: "5 · Safe route generated",
-    d: "NetworkX path over the OSM graph avoids the submerged NH-66 service road; 4.2 km, ETA 18 minutes.",
+    d: "The prototype route fixture avoids the submerged NH-66 service road; 4.2 km, ETA 18 minutes. NetworkX is planned for the backend phase.",
     to: "/map",
   },
   {
@@ -69,15 +79,18 @@ const STEPS: { t: string; d: string; to?: "/" | "/sos" | "/allocation" | "/map" 
   },
 ];
 
-function DemoPage() {
+export default function DemoPage() {
   return (
     <div className="space-y-6">
       <div className="panel p-5">
-        <h1 className="text-xl font-semibold tracking-tight">End-to-end demonstration run</h1>
+        <h1 className="text-xl font-semibold tracking-tight">
+          End-to-end demonstration run
+        </h1>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-          Data → flood prediction → SOS → priority scoring → resource matching → smart allocation → safe routing →
-          human confirmation → alerts → relief camps → field feedback. Follow the steps in order; each links to the
-          live screen where that stage is performed.
+          Demo risk feed → SOS → priority scoring → resource matching → smart
+          allocation → safe routing → human confirmation → alerts → relief camps
+          → field feedback. Follow the steps in order; each links to the live
+          screen where that stage is performed.
         </p>
       </div>
 
@@ -89,7 +102,10 @@ function DemoPage() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold">{s.t}</h2>
                 {s.to && (
-                  <Link to={s.to} className="text-xs font-semibold text-primary hover:underline">
+                  <Link
+                    href={s.to}
+                    className="text-xs font-semibold text-primary hover:underline"
+                  >
                     Open screen →
                   </Link>
                 )}
@@ -104,18 +120,17 @@ function DemoPage() {
         <h2 className="text-sm font-semibold">Reference architecture</h2>
         <div className="mt-3 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["Frontend", "TypeScript · React · Tailwind CSS"],
-            ["Backend-ready", "Django + Django REST Framework"],
+            ["Frontend", "Next.js · TypeScript · Tailwind CSS"],
+            ["Backend (next phase)", "Django + Django REST Framework"],
             ["Database", "PostgreSQL + PostGIS"],
             ["Maps", "Leaflet + OpenStreetMap"],
-            ["AI / ML", "Python · scikit-learn · XGBoost"],
-            ["Data", "Pandas · NumPy · GeoPandas"],
-            ["Optimisation", "Google OR-Tools"],
-            ["Routing", "NetworkX over OSM graphs"],
-            ["Realtime", "WebSockets + Redis"],
-            ["Tasks", "Celery workers"],
+            ["Prototype data", "Typed fixtures · React state"],
+            ["Optimisation (next phase)", "Google OR-Tools"],
+            ["Routing (next phase)", "NetworkX over OSM graphs"],
+            ["Realtime (next phase)", "WebSockets + Redis"],
+            ["Tasks (next phase)", "Celery workers"],
             ["Deployment", "Docker · Vercel · Render / AWS"],
-            ["Resilience", "Offline cache · SMS gateway fallback"],
+            ["AI / ML", "Deferred beyond prototype"],
           ].map(([k, v]) => (
             <div key={k} className="rounded-md border border-border p-3">
               <p className="font-semibold text-foreground">{k}</p>

@@ -1,4 +1,7 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useAegis } from "@/lib/aegis/store";
 
@@ -16,15 +19,15 @@ const NAV = [
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { online, lastSync, setOnline } = useAegis();
+  const pathname = usePathname();
+  const { online, lastSync, setOnline, dataSource } = useAegis();
 
   return (
     <div className="min-h-screen bg-background">
       <div className="h-1 w-full brand-gradient" />
       <header className="sticky top-0 z-[900] border-b border-border bg-card/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-3 px-4 py-3">
-          <Link to="/" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
             <span className="grid size-9 place-items-center rounded-md brand-gradient text-sm font-bold text-white">
               AB
             </span>
@@ -41,6 +44,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="hidden text-right sm:block">
               <p className="text-[11px] text-muted-foreground">Last sync</p>
               <p className="text-xs font-medium text-foreground">{lastSync}</p>
+              <p className="text-[10px] font-medium text-muted-foreground">
+                {dataSource === "postgres"
+                  ? "PostgreSQL + PostGIS"
+                  : dataSource === "loading"
+                    ? "Connecting to backend…"
+                    : "Demo fallback data"}
+              </p>
             </div>
             <button
               onClick={() => setOnline(!online)}
@@ -50,7 +60,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                   : "border-amber/40 bg-amber/15 text-[oklch(0.45_0.13_75)]"
               }`}
             >
-              <span className={`size-2 rounded-full ${online ? "bg-green" : "bg-amber"}`} />
+              <span
+                className={`size-2 rounded-full ${online ? "bg-green" : "bg-amber"}`}
+              />
               {online ? "ONLINE" : "DEGRADED MODE"}
             </button>
           </div>
@@ -62,7 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               return (
                 <li key={n.to}>
                   <Link
-                    to={n.to}
+                    href={n.to}
                     className={`inline-block rounded-t-md border-b-2 px-3 py-2 text-[13px] font-medium transition-colors ${
                       active
                         ? "border-primary text-primary"
@@ -80,7 +92,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {!online && (
         <div className="border-b border-amber/40 bg-amber/10 px-4 py-2 text-center text-xs font-medium text-[oklch(0.42_0.13_75)]">
-          Connectivity degraded — operating on the cached response plan. Field operations continue offline.
+          Connectivity degraded — operating on the cached response plan. Field
+          operations continue offline.
         </div>
       )}
 
@@ -88,7 +101,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <footer className="mt-8 border-t border-border bg-card">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-1 px-4 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>Aegis Bharat · Integrated with SDMA / NDRF / IMD / CWC data feeds (demo dataset)</p>
+          <p>
+            Aegis Bharat · Integrated with SDMA / NDRF / IMD / CWC data feeds
+            (demo dataset)
+          </p>
           <p>Human-in-the-loop dispatch · No automatic deployment</p>
         </div>
       </footer>

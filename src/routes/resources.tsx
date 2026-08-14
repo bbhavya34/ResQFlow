@@ -1,9 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
+import { definePage } from "@/lib/page-definition";
 import { useState } from "react";
 import { SectionTitle, StatCard } from "@/components/aegis/ui";
 import { useAegis } from "@/lib/aegis/store";
 
-export const Route = createFileRoute("/resources")({
+export const Route = definePage("/resources")({
   head: () => ({
     meta: [
       { title: "Resource Registry — Aegis Bharat" },
@@ -13,28 +15,42 @@ export const Route = createFileRoute("/resources")({
           "Unified registry of NDRF, SDRF, fire services, ambulances and verified civilian boats, vehicles and volunteers with live availability.",
       },
       { property: "og:title", content: "Resource Registry — Aegis Bharat" },
-      { property: "og:description", content: "Official and verified civilian rescue capacity across Indian flood districts." },
+      {
+        property: "og:description",
+        content:
+          "Official and verified civilian rescue capacity across Indian flood districts.",
+      },
     ],
   }),
   component: ResourcesPage,
 });
 
-function ResourcesPage() {
+export default function ResourcesPage() {
   const { resources } = useAegis();
   const [filter, setFilter] = useState<"ALL" | "OFFICIAL" | "CIVILIAN">("ALL");
-  const list = resources.filter((r) => filter === "ALL" || r.category === filter);
+  const list = resources.filter(
+    (r) => filter === "ALL" || r.category === filter,
+  );
   const seats = resources.reduce((n, r) => n + r.capacity, 0);
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Registered resources" value={resources.length} sub="official + civilian" />
+        <StatCard
+          label="Registered resources"
+          value={resources.length}
+          sub="official + civilian"
+        />
         <StatCard
           label="Available now"
           value={resources.filter((r) => r.availability === "AVAILABLE").length}
           tone="good"
         />
-        <StatCard label="Total lift capacity" value={seats} sub="persons per sortie" />
+        <StatCard
+          label="Total lift capacity"
+          value={seats}
+          sub="persons per sortie"
+        />
         <StatCard
           label="Verification pending"
           value={resources.filter((r) => !r.verified).length}
@@ -55,7 +71,9 @@ function ResourcesPage() {
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`rounded px-3 py-1 text-xs font-semibold ${
-                  filter === f ? "brand-gradient text-white" : "text-muted-foreground"
+                  filter === f
+                    ? "brand-gradient text-white"
+                    : "text-muted-foreground"
                 }`}
               >
                 {f}
@@ -67,13 +85,21 @@ function ResourcesPage() {
           <table className="w-full min-w-[1000px] text-sm">
             <thead className="bg-muted/60 text-[11px] uppercase tracking-wide text-muted-foreground">
               <tr>
-                {["ID", "Resource", "Agency", "Base / location", "Capacity", "Capabilities", "Availability", "Verified", "Updated"].map(
-                  (h) => (
-                    <th key={h} className="px-4 py-2 text-left font-semibold">
-                      {h}
-                    </th>
-                  ),
-                )}
+                {[
+                  "ID",
+                  "Resource",
+                  "Agency",
+                  "Base / location",
+                  "Capacity",
+                  "Capabilities",
+                  "Availability",
+                  "Verified",
+                  "Updated",
+                ].map((h) => (
+                  <th key={h} className="px-4 py-2 text-left font-semibold">
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -82,7 +108,9 @@ function ResourcesPage() {
                   <td className="px-4 py-2 font-semibold">{r.id}</td>
                   <td className="px-4 py-2">
                     <div className="font-medium">{r.name}</div>
-                    <div className="text-xs text-muted-foreground">{r.type} · {r.contact}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {r.type} · {r.contact}
+                    </div>
                   </td>
                   <td className="px-4 py-2 text-xs">
                     {r.agency}
@@ -98,7 +126,10 @@ function ResourcesPage() {
                   <td className="px-4 py-2">
                     <div className="flex flex-wrap gap-1">
                       {r.capabilities.map((c) => (
-                        <span key={c} className="rounded bg-accent px-1.5 py-0.5 text-[11px] text-accent-foreground">
+                        <span
+                          key={c}
+                          className="rounded bg-accent px-1.5 py-0.5 text-[11px] text-accent-foreground"
+                        >
                           {c}
                         </span>
                       ))}
@@ -117,8 +148,12 @@ function ResourcesPage() {
                       {r.availability}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-xs">{r.verified ? "Verified" : "Pending"}</td>
-                  <td className="px-4 py-2 text-xs text-muted-foreground">{r.lastUpdate}</td>
+                  <td className="px-4 py-2 text-xs">
+                    {r.verified ? "Verified" : "Pending"}
+                  </td>
+                  <td className="px-4 py-2 text-xs text-muted-foreground">
+                    {r.lastUpdate}
+                  </td>
                 </tr>
               ))}
             </tbody>

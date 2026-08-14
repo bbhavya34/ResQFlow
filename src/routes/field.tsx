@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
+import { definePage } from "@/lib/page-definition";
 import { useState } from "react";
 import { toast } from "sonner";
 import { SectionTitle, StatusBadge } from "@/components/aegis/ui";
@@ -13,7 +15,7 @@ const TYPES = [
   "Resource unavailable",
 ] as const;
 
-export const Route = createFileRoute("/field")({
+export const Route = definePage("/field")({
   head: () => ({
     meta: [
       { title: "Field Feedback Loop — Aegis Bharat" },
@@ -23,13 +25,17 @@ export const Route = createFileRoute("/field")({
           "Responders report rescued, still stranded, water rising, blocked roads and medical emergencies; the response plan updates immediately.",
       },
       { property: "og:title", content: "Field Feedback Loop — Aegis Bharat" },
-      { property: "og:description", content: "Two-way responder reporting that keeps the rescue plan current." },
+      {
+        property: "og:description",
+        content:
+          "Two-way responder reporting that keeps the rescue plan current.",
+      },
     ],
   }),
   component: FieldPage,
 });
 
-function FieldPage() {
+export default function FieldPage() {
   const { sosList, feedback, submitFeedback, online } = useAegis();
   const [sosId, setSosId] = useState(sosList[0]?.id ?? "");
   const [type, setType] = useState<string>("Rescued");
@@ -59,14 +65,18 @@ function FieldPage() {
           </label>
 
           <div>
-            <p className="text-xs font-semibold text-muted-foreground">Report type</p>
+            <p className="text-xs font-semibold text-muted-foreground">
+              Report type
+            </p>
             <div className="mt-2 grid grid-cols-2 gap-2">
               {TYPES.map((t) => (
                 <button
                   key={t}
                   onClick={() => setType(t)}
                   className={`rounded-md border px-3 py-2 text-xs font-medium ${
-                    type === t ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+                    type === t
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground"
                   }`}
                 >
                   {t}
@@ -88,10 +98,17 @@ function FieldPage() {
 
           <button
             onClick={() => {
-              submitFeedback(sosId, type, note || `${type} reported from the field.`, "Field Unit · Ops radio");
+              submitFeedback(
+                sosId,
+                type,
+                note || `${type} reported from the field.`,
+                "Field Unit · Ops radio",
+              );
               setNote("");
               toast.success(
-                online ? `Report logged for SOS ${sosId}` : `Report queued offline for SOS ${sosId}`,
+                online
+                  ? `Report logged for SOS ${sosId}`
+                  : `Report queued offline for SOS ${sosId}`,
               );
             }}
             className="w-full rounded-md brand-gradient px-4 py-2 text-sm font-semibold text-white"
@@ -99,15 +116,19 @@ function FieldPage() {
             Submit field report
           </button>
           <p className="text-[11px] text-muted-foreground">
-            “Rescued” closes the request, releases the resource and increments relief-camp occupancy. “Water rising”
-            and “Still stranded” push the request back into the triage queue for re-prioritisation.
+            “Rescued” closes the request, releases the resource and increments
+            relief-camp occupancy. “Water rising” and “Still stranded” push the
+            request back into the triage queue for re-prioritisation.
           </p>
         </div>
       </div>
 
       <div className="space-y-6">
         <div className="panel p-4">
-          <SectionTitle title="Field report log" desc="Chronological, auditable trail." />
+          <SectionTitle
+            title="Field report log"
+            desc="Chronological, auditable trail."
+          />
           <ul className="space-y-3">
             {feedback.map((f) => (
               <li key={f.id} className="rounded-md border border-border p-3">
@@ -140,7 +161,9 @@ function FieldPage() {
                 <tr key={s.id} className="border-t border-border">
                   <td className="py-2 font-semibold">{s.id}</td>
                   <td className="py-2 text-xs">{s.place}</td>
-                  <td className="py-2 text-xs">{s.assignedResourceId ?? "—"}</td>
+                  <td className="py-2 text-xs">
+                    {s.assignedResourceId ?? "—"}
+                  </td>
                   <td className="py-2">
                     <StatusBadge status={s.status} />
                   </td>

@@ -1,8 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
+import { definePage } from "@/lib/page-definition";
 import { SectionTitle, StatCard } from "@/components/aegis/ui";
 import { useAegis } from "@/lib/aegis/store";
 
-export const Route = createFileRoute("/camps")({
+export const Route = definePage("/camps")({
   head: () => ({
     meta: [
       { title: "Relief Camp Operations — Aegis Bharat" },
@@ -11,14 +13,21 @@ export const Route = createFileRoute("/camps")({
         content:
           "Occupancy, food and water stock, medical staffing and urgent requisitions across relief camps in Kerala, Assam, Bihar, Odisha, Bengal and Uttarakhand.",
       },
-      { property: "og:title", content: "Relief Camp Operations — Aegis Bharat" },
-      { property: "og:description", content: "Live relief camp capacity and supply dashboard for Indian flood districts." },
+      {
+        property: "og:title",
+        content: "Relief Camp Operations — Aegis Bharat",
+      },
+      {
+        property: "og:description",
+        content:
+          "Live relief camp capacity and supply dashboard for Indian flood districts.",
+      },
     ],
   }),
   component: CampsPage,
 });
 
-function CampsPage() {
+export default function CampsPage() {
   const { camps } = useAegis();
   const occupancy = camps.reduce((n, c) => n + c.occupancy, 0);
   const capacity = camps.reduce((n, c) => n + c.capacity, 0);
@@ -26,8 +35,16 @@ function CampsPage() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Camps operational" value={camps.length} sub="6 districts" />
-        <StatCard label="Persons sheltered" value={occupancy} sub={`of ${capacity} sanctioned capacity`} />
+        <StatCard
+          label="Camps operational"
+          value={camps.length}
+          sub="6 districts"
+        />
+        <StatCard
+          label="Persons sheltered"
+          value={occupancy}
+          sub={`of ${capacity} sanctioned capacity`}
+        />
         <StatCard
           label="Camps critical"
           value={camps.filter((c) => c.status === "CRITICAL").length}
@@ -48,7 +65,9 @@ function CampsPage() {
             <div key={c.id} className="panel p-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h3 className="text-sm font-semibold leading-snug">{c.name}</h3>
+                  <h3 className="text-sm font-semibold leading-snug">
+                    {c.name}
+                  </h3>
                   <p className="text-xs text-muted-foreground">
                     {c.district}, {c.state} · {c.id}
                   </p>
@@ -83,31 +102,44 @@ function CampsPage() {
 
               <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
                 <div className="rounded border border-border py-2">
-                  <p className="text-base font-semibold tabular-nums">{c.foodDays}d</p>
+                  <p className="text-base font-semibold tabular-nums">
+                    {c.foodDays}d
+                  </p>
                   <p className="text-muted-foreground">Food</p>
                 </div>
                 <div className="rounded border border-border py-2">
-                  <p className="text-base font-semibold tabular-nums">{c.waterDays}d</p>
+                  <p className="text-base font-semibold tabular-nums">
+                    {c.waterDays}d
+                  </p>
                   <p className="text-muted-foreground">Water</p>
                 </div>
                 <div className="rounded border border-border py-2">
-                  <p className="text-base font-semibold tabular-nums">{c.medicalStaff}</p>
+                  <p className="text-base font-semibold tabular-nums">
+                    {c.medicalStaff}
+                  </p>
                   <p className="text-muted-foreground">Medics</p>
                 </div>
               </div>
 
               <div className="mt-3 text-xs">
-                <p className="font-semibold text-muted-foreground">Urgent requests</p>
+                <p className="font-semibold text-muted-foreground">
+                  Urgent requests
+                </p>
                 {c.urgent.length ? (
                   <div className="mt-1 flex flex-wrap gap-1">
                     {c.urgent.map((u) => (
-                      <span key={u} className="rounded bg-destructive/10 px-2 py-0.5 text-destructive">
+                      <span
+                        key={u}
+                        className="rounded bg-destructive/10 px-2 py-0.5 text-destructive"
+                      >
                         {u}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <p className="mt-1 text-muted-foreground">None — stocks adequate</p>
+                  <p className="mt-1 text-muted-foreground">
+                    None — stocks adequate
+                  </p>
                 )}
               </div>
             </div>
@@ -116,7 +148,10 @@ function CampsPage() {
       </div>
 
       <div className="panel p-4">
-        <SectionTitle title="Supply requisition queue" desc="Auto-raised from camp stock thresholds; district collector approval pending." />
+        <SectionTitle
+          title="Supply requisition queue"
+          desc="Auto-raised from camp stock thresholds; district collector approval pending."
+        />
         <table className="w-full text-sm">
           <thead className="text-[11px] uppercase text-muted-foreground">
             <tr>
@@ -131,7 +166,9 @@ function CampsPage() {
                 <tr key={c.id + u} className="border-t border-border">
                   <td className="py-2">{c.name}</td>
                   <td className="py-2">{u}</td>
-                  <td className="py-2 text-xs">{c.status === "CRITICAL" ? "Immediate" : "Within 24 hrs"}</td>
+                  <td className="py-2 text-xs">
+                    {c.status === "CRITICAL" ? "Immediate" : "Within 24 hrs"}
+                  </td>
                 </tr>
               )),
             )}

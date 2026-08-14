@@ -1,4 +1,5 @@
-export type Status = "NEW" | "TRIAGED" | "ASSIGNED" | "DISPATCHED" | "RESCUED" | "CLOSED";
+export type Status =
+  "NEW" | "TRIAGED" | "ASSIGNED" | "DISPATCHED" | "RESCUED" | "CLOSED";
 
 export type PriorityFactor = {
   label: string;
@@ -683,11 +684,46 @@ export const FLOOD_ZONES: FloodZone[] = [
 ];
 
 export const FACILITIES: Facility[] = [
-  { id: "H1", name: "Ernakulam General Hospital", kind: "HOSPITAL", lat: 9.9755, lng: 76.2795, detail: "42 beds free · Trauma unit" },
-  { id: "H2", name: "Gauhati Medical College", kind: "HOSPITAL", lat: 26.1445, lng: 91.7016, detail: "18 beds free · Dialysis" },
-  { id: "H3", name: "PMCH Patna", kind: "HOSPITAL", lat: 25.6205, lng: 85.1614, detail: "9 beds free · Snakebite AV stock" },
-  { id: "S1", name: "Aluva Town Hall Shelter", kind: "SHELTER", lat: 10.1121, lng: 76.3495, detail: "Capacity 300 · 140 occupied" },
-  { id: "S2", name: "Kurla Municipal School Shelter", kind: "SHELTER", lat: 19.0724, lng: 72.8896, detail: "Capacity 250 · 96 occupied" },
+  {
+    id: "H1",
+    name: "Ernakulam General Hospital",
+    kind: "HOSPITAL",
+    lat: 9.9755,
+    lng: 76.2795,
+    detail: "42 beds free · Trauma unit",
+  },
+  {
+    id: "H2",
+    name: "Gauhati Medical College",
+    kind: "HOSPITAL",
+    lat: 26.1445,
+    lng: 91.7016,
+    detail: "18 beds free · Dialysis",
+  },
+  {
+    id: "H3",
+    name: "PMCH Patna",
+    kind: "HOSPITAL",
+    lat: 25.6205,
+    lng: 85.1614,
+    detail: "9 beds free · Snakebite AV stock",
+  },
+  {
+    id: "S1",
+    name: "Aluva Town Hall Shelter",
+    kind: "SHELTER",
+    lat: 10.1121,
+    lng: 76.3495,
+    detail: "Capacity 300 · 140 occupied",
+  },
+  {
+    id: "S2",
+    name: "Kurla Municipal School Shelter",
+    kind: "SHELTER",
+    lat: 19.0724,
+    lng: 72.8896,
+    detail: "Capacity 250 · 96 occupied",
+  },
 ];
 
 export const RIVERS: { name: string; path: [number, number][] }[] = [
@@ -721,7 +757,11 @@ export const RIVERS: { name: string; path: [number, number][] }[] = [
   },
 ];
 
-export const BLOCKED_ROADS: { name: string; path: [number, number][]; reason: string }[] = [
+export const BLOCKED_ROADS: {
+  name: string;
+  path: [number, number][];
+  reason: string;
+}[] = [
   {
     name: "NH-66 service road, Edappally",
     path: [
@@ -741,7 +781,14 @@ export const BLOCKED_ROADS: { name: string; path: [number, number][]; reason: st
   },
 ];
 
-export const SAFE_ROUTE: { sosId: string; resourceId: string; path: [number, number][]; km: number; etaMin: number; nodes: number } = {
+export const SAFE_ROUTE: {
+  sosId: string;
+  resourceId: string;
+  path: [number, number][];
+  km: number;
+  etaMin: number;
+  nodes: number;
+} = {
   sosId: "A1024",
   resourceId: "B-14",
   path: [
@@ -799,7 +846,10 @@ export const ANALYTICS = {
     { t: "D0", kerala: 91, assam: 87, bihar: 74 },
     { t: "D+1", kerala: 84, assam: 81, bihar: 79 },
   ],
-  campOccupancy: CAMPS.map((c) => ({ name: c.id.replace("RC-", ""), occ: Math.round((c.occupancy / c.capacity) * 100) })),
+  campOccupancy: CAMPS.map((c) => ({
+    name: c.id.replace("RC-", ""),
+    occ: Math.round((c.occupancy / c.capacity) * 100),
+  })),
   accuracy: [
     { m: "Mar", acc: 78 },
     { m: "Apr", acc: 81 },

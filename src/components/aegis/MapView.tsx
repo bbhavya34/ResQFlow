@@ -1,5 +1,18 @@
+"use client";
+
 import "leaflet/dist/leaflet.css";
-import { CircleMarker, MapContainer, Polygon, Polyline, Popup, TileLayer, Tooltip } from "react-leaflet";
+import { useEffect } from "react";
+import L from "leaflet";
+import {
+  CircleMarker,
+  MapContainer,
+  Polygon,
+  Polyline,
+  Popup,
+  TileLayer,
+  Tooltip,
+  useMap,
+} from "react-leaflet";
 import {
   BLOCKED_ROADS,
   CAMPS,
@@ -28,7 +41,10 @@ function circle(lat: number, lng: number, km: number): [number, number][] {
   const pts: [number, number][] = [];
   for (let i = 0; i <= 48; i++) {
     const a = (i / 48) * Math.PI * 2;
-    pts.push([lat + (km / 111) * Math.sin(a), lng + (km / (111 * Math.cos((lat * Math.PI) / 180))) * Math.cos(a)]);
+    pts.push([
+      lat + (km / 111) * Math.sin(a),
+      lng + (km / (111 * Math.cos((lat * Math.PI) / 180))) * Math.cos(a),
+    ]);
   }
   return pts;
 }
@@ -39,16 +55,54 @@ const riskColor: Record<string, string> = {
   MODERATE: "#0d9488",
 };
 
+const INDIA_CENTER: [number, number] = [22.5, 79];
+const INDIA_ZOOM = 5;
+
+function IndiaResetControl() {
+  const map = useMap();
+
+  useEffect(() => {
+    const ResetControl = L.Control.extend({
+      options: { position: "topleft" as L.ControlPosition },
+      onAdd() {
+        const container = L.DomUtil.create(
+          "div",
+          "leaflet-bar leaflet-control",
+        );
+        const button = L.DomUtil.create("button", "aegis-map-reset", container);
+        button.type = "button";
+        button.title = "Reset map to India";
+        button.setAttribute("aria-label", "Reset map to India");
+        button.textContent = "↻";
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.on(button, "click", () => {
+          map.setView(INDIA_CENTER, INDIA_ZOOM, { animate: true });
+        });
+        return container;
+      },
+    });
+    const control = new ResetControl();
+    control.addTo(map);
+    return () => {
+      control.remove();
+    };
+  }, [map]);
+
+  return null;
+}
+
 export default function MapView({
   layers,
   center = [17.5, 80.5],
   zoom = 5,
   height = 560,
+  showIndiaReset = false,
 }: {
   layers: Layers;
   center?: [number, number] | undefined;
   zoom?: number | undefined;
   height?: number | undefined;
+  showIndiaReset?: boolean | undefined;
 }) {
   const { sosList, resources } = useAegis();
 
@@ -60,8 +114,9 @@ export default function MapView({
       style={{ height, width: "100%" }}
       className="rounded-lg"
     >
+      {showIndiaReset && <IndiaResetControl />}
       <TileLayer
-        attribution='&copy; OpenStreetMap contributors'
+        attribution="&copy; OpenStreetMap contributors"
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
@@ -70,13 +125,21 @@ export default function MapView({
           <Polygon
             key={z.id}
             positions={circle(z.lat, z.lng, z.radiusKm)}
-            pathOptions={{ color: riskColor[z.risk], fillOpacity: 0.12, weight: 1.5 }}
+            pathOptions={{
+              color: riskColor[z.risk],
+              fillOpacity: 0.12,
+              weight: 1.5,
+            }}
           >
             <Popup>
               <div className="text-xs">
                 <div className="font-semibold">{z.name}</div>
-                <div>{z.river} · {z.state}</div>
-                <div>Risk: {z.risk} ({Math.round(z.probability * 100)}%)</div>
+                <div>
+                  {z.river} · {z.state}
+                </div>
+                <div>
+                  Risk: {z.risk} ({Math.round(z.probability * 100)}%)
+                </div>
                 <div className="mt-1 text-slate-600">{z.forecast}</div>
               </div>
             </Popup>
@@ -85,7 +148,11 @@ export default function MapView({
 
       {layers.rivers &&
         RIVERS.map((r) => (
-          <Polyline key={r.name} positions={r.path} pathOptions={{ color: "#2563eb", weight: 3, opacity: 0.6 }}>
+          <Polyline
+            key={r.name}
+            positions={r.path}
+            pathOptions={{ color: "#2563eb", weight: 3, opacity: 0.6 }}
+          >
             <Tooltip>{r.name} river</Tooltip>
           </Polyline>
         ))}
@@ -97,14 +164,20 @@ export default function MapView({
             positions={r.path}
             pathOptions={{ color: "#b91c1c", weight: 4, dashArray: "6 6" }}
           >
-            <Tooltip>Blocked: {r.name} — {r.reason}</Tooltip>
+            <Tooltip>
+              Blocked: {r.name} — {r.reason}
+            </Tooltip>
           </Polyline>
         ))}
 
       {layers.route && (
-        <Polyline positions={SAFE_ROUTE.path} pathOptions={{ color: "#059669", weight: 5 }}>
+        <Polyline
+          positions={SAFE_ROUTE.path}
+          pathOptions={{ color: "#059669", weight: 5 }}
+        >
           <Tooltip>
-            Safe route {SAFE_ROUTE.resourceId} → {SAFE_ROUTE.sosId} · {SAFE_ROUTE.km} km · {SAFE_ROUTE.etaMin} min
+            Safe route {SAFE_ROUTE.resourceId} → {SAFE_ROUTE.sosId} ·{" "}
+            {SAFE_ROUTE.km} km · {SAFE_ROUTE.etaMin} min
           </Tooltip>
         </Polyline>
       )}
@@ -114,19 +187,35 @@ export default function MapView({
           const score = priorityScore(s.factors);
           const band = priorityBand(score);
           const color =
-            band.tone === "critical" ? "#dc2626" : band.tone === "high" ? "#ea8a04" : "#0d9488";
+            band.tone === "critical"
+              ? "#dc2626"
+              : band.tone === "high"
+                ? "#ea8a04"
+                : "#0d9488";
           return (
             <CircleMarker
               key={s.id}
               center={[s.lat, s.lng]}
               radius={8}
-              pathOptions={{ color, fillColor: color, fillOpacity: 0.85, weight: 2 }}
+              pathOptions={{
+                color,
+                fillColor: color,
+                fillOpacity: 0.85,
+                weight: 2,
+              }}
             >
               <Popup>
                 <div className="text-xs">
-                  <div className="font-semibold">SOS {s.id} — {band.label} {score}/100</div>
-                  <div>{s.place}, {s.district}, {s.state}</div>
-                  <div>{s.people} persons · {s.livestock} livestock · {s.floodDepthM} m depth</div>
+                  <div className="font-semibold">
+                    SOS {s.id} — {band.label} {score}/100
+                  </div>
+                  <div>
+                    {s.place}, {s.district}, {s.state}
+                  </div>
+                  <div>
+                    {s.people} persons · {s.livestock} livestock ·{" "}
+                    {s.floodDepthM} m depth
+                  </div>
                   <div>Status: {s.status}</div>
                 </div>
               </Popup>
@@ -149,9 +238,13 @@ export default function MapView({
           >
             <Popup>
               <div className="text-xs">
-                <div className="font-semibold">{r.name} ({r.id})</div>
+                <div className="font-semibold">
+                  {r.name} ({r.id})
+                </div>
                 <div>{r.agency}</div>
-                <div>Capacity {r.capacity} · {r.availability}</div>
+                <div>
+                  Capacity {r.capacity} · {r.availability}
+                </div>
                 <div>{r.capabilities.join(", ")}</div>
               </div>
             </Popup>
@@ -164,20 +257,31 @@ export default function MapView({
             key={c.id}
             center={[c.lat, c.lng]}
             radius={7}
-            pathOptions={{ color: "#047857", fillColor: "#10b981", fillOpacity: 0.9, weight: 2 }}
+            pathOptions={{
+              color: "#047857",
+              fillColor: "#10b981",
+              fillOpacity: 0.9,
+              weight: 2,
+            }}
           >
             <Popup>
               <div className="text-xs">
                 <div className="font-semibold">{c.name}</div>
-                <div>{c.occupancy}/{c.capacity} occupancy · {c.status}</div>
-                <div>Food {c.foodDays} d · Water {c.waterDays} d</div>
+                <div>
+                  {c.occupancy}/{c.capacity} occupancy · {c.status}
+                </div>
+                <div>
+                  Food {c.foodDays} d · Water {c.waterDays} d
+                </div>
               </div>
             </Popup>
           </CircleMarker>
         ))}
 
       {FACILITIES.filter(
-        (f) => (f.kind === "HOSPITAL" && layers.hospitals) || (f.kind === "SHELTER" && layers.shelters),
+        (f) =>
+          (f.kind === "HOSPITAL" && layers.hospitals) ||
+          (f.kind === "SHELTER" && layers.shelters),
       ).map((f) => (
         <CircleMarker
           key={f.id}

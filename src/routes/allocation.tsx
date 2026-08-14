@@ -1,38 +1,61 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
+import { definePage } from "@/lib/page-definition";
 import { useState } from "react";
 import { toast } from "sonner";
 import { MapPanel } from "@/components/aegis/MapPanel";
-import { PriorityBreakdown, PriorityPill, SectionTitle, StatusBadge } from "@/components/aegis/ui";
+import {
+  PriorityBreakdown,
+  PriorityPill,
+  SectionTitle,
+  StatusBadge,
+} from "@/components/aegis/ui";
 import { SAFE_ROUTE, priorityScore } from "@/lib/aegis/data";
 import { useAegis } from "@/lib/aegis/store";
 
-export const Route = createFileRoute("/allocation")({
+export const Route = definePage("/allocation")({
   head: () => ({
     meta: [
       { title: "Smart Allocation & Human Confirmation — Aegis Bharat" },
       {
         name: "description",
         content:
-          "OR-Tools style resource matching with ETA, capacity and capability reasoning. Nothing is dispatched without controller confirmation.",
+          "Deterministic prototype matching with ETA, capacity and capability reasoning. Nothing is dispatched without controller confirmation.",
       },
-      { property: "og:title", content: "Smart Allocation & Human Confirmation — Aegis Bharat" },
-      { property: "og:description", content: "Explainable rescue assignments with confirm, override and reject controls." },
+      {
+        property: "og:title",
+        content: "Smart Allocation & Human Confirmation — Aegis Bharat",
+      },
+      {
+        property: "og:description",
+        content:
+          "Explainable rescue assignments with confirm, override and reject controls.",
+      },
     ],
   }),
   component: AllocationPage,
 });
 
-function AllocationPage() {
-  const { recommendations, resources, sosList, confirmDispatch, overrideAssign, rejectRecommendation } = useAegis();
+export default function AllocationPage() {
+  const {
+    recommendations,
+    resources,
+    sosList,
+    confirmDispatch,
+    overrideAssign,
+    rejectRecommendation,
+  } = useAegis();
   const [override, setOverride] = useState<Record<string, string>>({});
-  const dispatched = sosList.filter((s) => s.status === "DISPATCHED" || s.status === "ASSIGNED");
+  const dispatched = sosList.filter(
+    (s) => s.status === "DISPATCHED" || s.status === "ASSIGNED",
+  );
 
   return (
     <div className="space-y-6">
       <div className="panel p-4">
         <SectionTitle
           title="Smart allocation engine"
-          desc="Constraint solver (OR-Tools style) balances priority, travel time, craft capacity and capability match — livestock requests are routed to livestock-capable assets."
+          desc="Deterministic prototype rules balance priority, travel time, craft capacity and capability match. OR-Tools integration is deferred to the Django backend phase."
         />
         <div className="grid gap-3 text-xs sm:grid-cols-4">
           {[
@@ -62,20 +85,27 @@ function AllocationPage() {
                   <StatusBadge status={rec.sos.status} />
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {rec.sos.place}, {rec.sos.state} · {rec.sos.people} persons · {rec.sos.livestock} livestock
+                  {rec.sos.place}, {rec.sos.state} · {rec.sos.people} persons ·{" "}
+                  {rec.sos.livestock} livestock
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-4 text-center text-xs">
                 <div>
-                  <p className="text-lg font-semibold tabular-nums">{rec.etaMin} min</p>
+                  <p className="text-lg font-semibold tabular-nums">
+                    {rec.etaMin} min
+                  </p>
                   <p className="text-muted-foreground">ETA</p>
                 </div>
                 <div>
-                  <p className="text-lg font-semibold tabular-nums">{rec.resource.capacity}</p>
+                  <p className="text-lg font-semibold tabular-nums">
+                    {rec.resource.capacity}
+                  </p>
                   <p className="text-muted-foreground">Capacity</p>
                 </div>
                 <div>
-                  <p className="text-lg font-semibold tabular-nums">{rec.distanceKm.toFixed(1)} km</p>
+                  <p className="text-lg font-semibold tabular-nums">
+                    {rec.distanceKm.toFixed(1)} km
+                  </p>
                   <p className="text-muted-foreground">Distance</p>
                 </div>
               </div>
@@ -97,7 +127,10 @@ function AllocationPage() {
                 {rec.capabilityMatch.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1">
                     {rec.capabilityMatch.map((c) => (
-                      <span key={c} className="rounded bg-accent px-2 py-0.5 text-[11px] text-accent-foreground">
+                      <span
+                        key={c}
+                        className="rounded bg-accent px-2 py-0.5 text-[11px] text-accent-foreground"
+                      >
                         capability match · {c}
                       </span>
                     ))}
@@ -118,7 +151,9 @@ function AllocationPage() {
               <button
                 onClick={() => {
                   confirmDispatch(rec.sos.id, rec.resource.id);
-                  toast.success(`Dispatch confirmed: ${rec.resource.id} → SOS ${rec.sos.id}`);
+                  toast.success(
+                    `Dispatch confirmed: ${rec.resource.id} → SOS ${rec.sos.id}`,
+                  );
                 }}
                 className="rounded-md brand-gradient px-4 py-2 text-sm font-semibold text-white"
               >
@@ -126,12 +161,18 @@ function AllocationPage() {
               </button>
               <select
                 value={override[rec.sos.id] ?? ""}
-                onChange={(e) => setOverride((s) => ({ ...s, [rec.sos.id]: e.target.value }))}
+                onChange={(e) =>
+                  setOverride((s) => ({ ...s, [rec.sos.id]: e.target.value }))
+                }
                 className="rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
                 <option value="">Override with…</option>
                 {resources
-                  .filter((r) => r.availability === "AVAILABLE" && r.id !== rec.resource.id)
+                  .filter(
+                    (r) =>
+                      r.availability === "AVAILABLE" &&
+                      r.id !== rec.resource.id,
+                  )
                   .map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.id} — {r.name}
@@ -143,7 +184,9 @@ function AllocationPage() {
                 onClick={() => {
                   const id = override[rec.sos.id]!;
                   overrideAssign(rec.sos.id, id);
-                  toast.message(`Controller override: ${id} assigned to SOS ${rec.sos.id}`);
+                  toast.message(
+                    `Controller override: ${id} assigned to SOS ${rec.sos.id}`,
+                  );
                 }}
                 className="rounded-md border border-input px-4 py-2 text-sm font-semibold disabled:opacity-40"
               >
@@ -159,21 +202,26 @@ function AllocationPage() {
                 Reject
               </button>
               <span className="ml-auto text-xs text-muted-foreground">
-                No automatic dispatch — action is logged against the controller on duty.
+                No automatic dispatch — action is logged against the controller
+                on duty.
               </span>
             </div>
           </div>
         ))}
         {recommendations.length === 0 && (
           <div className="panel p-8 text-center text-sm text-muted-foreground">
-            No open requests awaiting allocation. All active SOS are assigned or closed.
+            No open requests awaiting allocation. All active SOS are assigned or
+            closed.
           </div>
         )}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <div className="panel p-4">
-          <SectionTitle title="Confirmed dispatches" desc="Live assignments after human confirmation." />
+          <SectionTitle
+            title="Confirmed dispatches"
+            desc="Live assignments after human confirmation."
+          />
           <table className="w-full text-sm">
             <thead className="text-[11px] uppercase text-muted-foreground">
               <tr>
@@ -196,7 +244,10 @@ function AllocationPage() {
               ))}
               {dispatched.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-4 text-center text-xs text-muted-foreground">
+                  <td
+                    colSpan={4}
+                    className="py-4 text-center text-xs text-muted-foreground"
+                  >
                     Nothing dispatched yet.
                   </td>
                 </tr>
@@ -209,7 +260,12 @@ function AllocationPage() {
             title="Safe route preview"
             desc={`${SAFE_ROUTE.resourceId} → SOS ${SAFE_ROUTE.sosId} · ${SAFE_ROUTE.km} km · ${SAFE_ROUTE.etaMin} min · flooded segments avoided`}
           />
-          <MapPanel height={340} showControls={false} center={[9.946, 76.28]} zoom={13} />
+          <MapPanel
+            height={340}
+            showControls={false}
+            center={[9.946, 76.28]}
+            zoom={13}
+          />
         </div>
       </div>
     </div>

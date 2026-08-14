@@ -1,10 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
+import { definePage } from "@/lib/page-definition";
 import { MapPanel } from "@/components/aegis/MapPanel";
-import { PriorityPill, SectionTitle, StatCard, StatusBadge } from "@/components/aegis/ui";
+import {
+  PriorityPill,
+  SectionTitle,
+  StatCard,
+  StatusBadge,
+} from "@/components/aegis/ui";
 import { FLOOD_ZONES, priorityScore } from "@/lib/aegis/data";
 import { useAegis } from "@/lib/aegis/store";
 
-export const Route = createFileRoute("/")({
+export const Route = definePage("/")({
   head: () => ({
     meta: [
       { title: "Aegis Bharat — National Disaster Response Command Centre" },
@@ -13,19 +21,25 @@ export const Route = createFileRoute("/")({
         content:
           "Live command centre for Indian flood response: SOS triage, priority scoring, resource allocation, safe routing and relief camps.",
       },
-      { property: "og:title", content: "Aegis Bharat — Disaster Response Command Centre" },
+      {
+        property: "og:title",
+        content: "Aegis Bharat — Disaster Response Command Centre",
+      },
       {
         property: "og:description",
-        content: "Unified flood prediction, SOS triage, resource allocation and relief camp operations for India.",
+        content:
+          "Unified risk alerts, SOS triage, resource allocation and relief camp operations for India.",
       },
     ],
   }),
   component: Index,
 });
 
-function Index() {
+export default function Index() {
   const { sosList, resources, camps, online, lastSync } = useAegis();
-  const open = sosList.filter((s) => s.status === "NEW" || s.status === "TRIAGED");
+  const open = sosList.filter(
+    (s) => s.status === "NEW" || s.status === "TRIAGED",
+  );
   const critical = sosList.filter((s) => priorityScore(s.factors) >= 85);
   const awaiting = open.reduce((n, s) => n + s.people, 0);
   const available = resources.filter((r) => r.availability === "AVAILABLE");
@@ -44,14 +58,19 @@ function Index() {
               Monsoon Flood Response — Live Command Centre
             </h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Kerala, Assam, Bihar, Odisha, West Bengal, Uttarakhand, Maharashtra and Gujarat sectors under
-              active watch. All dispatch actions require controller confirmation.
+              Kerala, Assam, Bihar, Odisha, West Bengal, Uttarakhand,
+              Maharashtra and Gujarat sectors under active watch. All dispatch
+              actions require controller confirmation.
             </p>
           </div>
           <div className="text-right text-xs text-muted-foreground">
             <p>Operational status</p>
-            <p className={`text-sm font-semibold ${online ? "text-[oklch(0.42_0.11_155)]" : "text-[oklch(0.45_0.13_75)]"}`}>
-              {online ? "ONLINE · all feeds nominal" : "DEGRADED · cached plan active"}
+            <p
+              className={`text-sm font-semibold ${online ? "text-[oklch(0.42_0.11_155)]" : "text-[oklch(0.45_0.13_75)]"}`}
+            >
+              {online
+                ? "ONLINE · all feeds nominal"
+                : "DEGRADED · cached plan active"}
             </p>
             <p className="mt-1">Last sync {lastSync}</p>
           </div>
@@ -59,13 +78,47 @@ function Index() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-8">
-        <StatCard label="Active SOS" value={open.length} sub="awaiting allocation" tone="critical" />
-        <StatCard label="Critical" value={critical.length} sub="priority ≥ 85" tone="critical" />
-        <StatCard label="Flood-risk zones" value={FLOOD_ZONES.length} sub="2 severe · 2 high" tone="warn" />
-        <StatCard label="Available resources" value={available.length} sub="verified & ready" tone="good" />
-        <StatCard label="Deployed" value={deployed.length} sub="engaged in operations" />
-        <StatCard label="Awaiting rescue" value={awaiting} sub="persons in open requests" tone="critical" />
-        <StatCard label="Relief camps" value={camps.length} sub={`${occupancy} persons sheltered`} tone="good" />
+        <StatCard
+          label="Active SOS"
+          value={open.length}
+          sub="awaiting allocation"
+          tone="critical"
+        />
+        <StatCard
+          label="Critical"
+          value={critical.length}
+          sub="priority ≥ 85"
+          tone="critical"
+        />
+        <StatCard
+          label="Flood-risk zones"
+          value={FLOOD_ZONES.length}
+          sub="2 severe · 2 high"
+          tone="warn"
+        />
+        <StatCard
+          label="Available resources"
+          value={available.length}
+          sub="verified & ready"
+          tone="good"
+        />
+        <StatCard
+          label="Deployed"
+          value={deployed.length}
+          sub="engaged in operations"
+        />
+        <StatCard
+          label="Awaiting rescue"
+          value={awaiting}
+          sub="persons in open requests"
+          tone="critical"
+        />
+        <StatCard
+          label="Relief camps"
+          value={camps.length}
+          sub={`${occupancy} persons sheltered`}
+          tone="good"
+        />
         <StatCard
           label="Connectivity"
           value={online ? "ONLINE" : "DEGRADED"}
@@ -80,7 +133,10 @@ function Index() {
             title="Operational map — India"
             desc="Leaflet + OpenStreetMap · flood zones, SOS, resources, camps, hospitals, shelters, rivers, blocked roads and the confirmed safe route."
             right={
-              <Link to="/map" className="text-xs font-semibold text-primary hover:underline">
+              <Link
+                href="/map"
+                className="text-xs font-semibold text-primary hover:underline"
+              >
                 Open full GIS view →
               </Link>
             }
@@ -90,14 +146,22 @@ function Index() {
 
         <div className="space-y-6">
           <div className="panel p-4">
-            <SectionTitle title="Priority queue" desc="Highest scoring open requests" />
+            <SectionTitle
+              title="Priority queue"
+              desc="Highest scoring open requests"
+            />
             <ul className="space-y-3">
               {open
                 .slice()
-                .sort((a, b) => priorityScore(b.factors) - priorityScore(a.factors))
+                .sort(
+                  (a, b) => priorityScore(b.factors) - priorityScore(a.factors),
+                )
                 .slice(0, 5)
                 .map((s) => (
-                  <li key={s.id} className="rounded-md border border-border p-3">
+                  <li
+                    key={s.id}
+                    className="rounded-md border border-border p-3"
+                  >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-semibold">SOS {s.id}</span>
                       <PriorityPill factors={s.factors} />
@@ -106,12 +170,15 @@ function Index() {
                       {s.place}, {s.state}
                     </p>
                     <p className="mt-1 text-xs">
-                      {s.people} persons · {s.children + s.elderly + s.disabled} vulnerable · {s.floodDepthM} m
-                      depth
+                      {s.people} persons · {s.children + s.elderly + s.disabled}{" "}
+                      vulnerable · {s.floodDepthM} m depth
                     </p>
                     <div className="mt-2 flex items-center justify-between">
                       <StatusBadge status={s.status} />
-                      <Link to="/allocation" className="text-xs font-semibold text-primary hover:underline">
+                      <Link
+                        href="/allocation"
+                        className="text-xs font-semibold text-primary hover:underline"
+                      >
                         Review allocation →
                       </Link>
                     </div>
@@ -121,10 +188,16 @@ function Index() {
           </div>
 
           <div className="panel p-4">
-            <SectionTitle title="Flood prediction watch" desc="CWC gauge + IMD rainfall model output" />
+            <SectionTitle
+              title="Flood risk watch"
+              desc="Prototype CWC + IMD fixture feed; no ML model"
+            />
             <ul className="space-y-2 text-xs">
               {FLOOD_ZONES.map((z) => (
-                <li key={z.id} className="flex items-start justify-between gap-3 border-b border-border pb-2 last:border-0">
+                <li
+                  key={z.id}
+                  className="flex items-start justify-between gap-3 border-b border-border pb-2 last:border-0"
+                >
                   <div>
                     <p className="font-medium text-foreground">{z.name}</p>
                     <p className="text-muted-foreground">{z.forecast}</p>

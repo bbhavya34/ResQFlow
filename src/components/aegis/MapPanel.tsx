@@ -1,7 +1,10 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+"use client";
+
+import dynamic from "next/dynamic";
+import { Suspense, useEffect, useState } from "react";
 import type { Layers } from "./MapView";
 
-const MapView = lazy(() => import("./MapView"));
+const MapView = dynamic(() => import("./MapView"), { ssr: false });
 
 const ALL: Layers = {
   flood: true,
@@ -33,12 +36,14 @@ export function MapPanel({
   zoom,
   initial,
   showControls = true,
+  showIndiaReset = false,
 }: {
   height?: number;
   center?: [number, number];
   zoom?: number;
   initial?: Partial<Layers>;
   showControls?: boolean;
+  showIndiaReset?: boolean;
 }) {
   const [mounted, setMounted] = useState(false);
   const [layers, setLayers] = useState<Layers>({ ...ALL, ...initial });
@@ -58,13 +63,18 @@ export function MapPanel({
                   : "border-border bg-muted/40 text-muted-foreground"
               }`}
             >
-              <span className={`size-2 rounded-full ${l.dot} ${layers[l.key] ? "" : "opacity-30"}`} />
+              <span
+                className={`size-2 rounded-full ${l.dot} ${layers[l.key] ? "" : "opacity-30"}`}
+              />
               {l.label}
             </button>
           ))}
         </div>
       )}
-      <div className="overflow-hidden rounded-lg border border-border" style={{ height }}>
+      <div
+        className="overflow-hidden rounded-lg border border-border"
+        style={{ height }}
+      >
         {mounted ? (
           <Suspense
             fallback={
@@ -73,7 +83,13 @@ export function MapPanel({
               </div>
             }
           >
-            <MapView layers={layers} height={height} center={center} zoom={zoom} />
+            <MapView
+              layers={layers}
+              height={height}
+              center={center}
+              zoom={zoom}
+              showIndiaReset={showIndiaReset}
+            />
           </Suspense>
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">

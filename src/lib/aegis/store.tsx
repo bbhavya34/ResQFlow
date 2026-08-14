@@ -1,4 +1,14 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   CAMPS,
   RESOURCES,
@@ -10,6 +20,13 @@ import {
   type SOS,
   type Status,
 } from "./data";
+import {
+  loadBackendSnapshot,
+  persistAssignment,
+  persistFeedback,
+  persistSOS,
+  persistSOSPatch,
+} from "./api";
 
 export type Recommendation = {
   sos: SOS;
@@ -23,11 +40,15 @@ export type Recommendation = {
 
 const R = 6371;
 const rad = (d: number) => (d * Math.PI) / 180;
-export function haversine(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+export function haversine(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number },
+) {
   const dLat = rad(b.lat - a.lat);
   const dLng = rad(b.lng - a.lng);
   const h =
-    Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
@@ -38,7 +59,9 @@ function recommendFor(sos: SOS, resources: Resource[]): Recommendation | null {
     const needsLivestock = sos.livestock > 0;
     const hasLivestock = r.capabilities.includes("Livestock");
     const needsMedical = sos.medical;
-    const hasMedical = r.capabilities.some((c) => /Medical|First aid|ALS|Paramedic/.test(c));
+    const hasMedical = r.capabilities.some((c) =>
+      /Medical|First aid|ALS|Paramedic/.test(c),
+    );
     const capacityOk = r.capacity >= sos.people;
     let score = 100;
     score -= Math.min(45, distanceKm * 3.2);
@@ -68,9 +91,19 @@ function recommendFor(sos: SOS, resources: Resource[]): Recommendation | null {
           ? `Livestock-capable craft matched to ${sos.livestock} animals`
           : `No livestock capability for ${sos.livestock} animals`
         : "No livestock component in this request",
-      r.verified ? `${r.agency} — verified resource` : `${r.agency} — verification pending`,
+      r.verified
+        ? `${r.agency} — verified resource`
+        : `${r.agency} — verification pending`,
     ];
-    return { sos, resource: r, score: Math.round(score), etaMin, distanceKm, capabilityMatch, reasons };
+    return {
+      sos,
+      resource: r,
+      score: Math.round(score),
+      etaMin,
+      distanceKm,
+      capabilityMatch,
+      reasons,
+    };
   });
   scored.sort((a, b) => b.score - a.score);
   return scored[0] ?? null;
@@ -85,13 +118,19 @@ type Ctx = {
   lastSync: string;
   planAgeMin: number;
   recommendations: Recommendation[];
+  dataSource: "loading" | "postgres" | "demo";
   setOnline: (v: boolean) => void;
   resync: () => void;
   confirmDispatch: (sosId: string, resourceId: string) => void;
   overrideAssign: (sosId: string, resourceId: string) => void;
   rejectRecommendation: (sosId: string) => void;
   addSOS: (s: SOS) => void;
-  submitFeedback: (sosId: string, type: string, note: string, by: string) => void;
+  submitFeedback: (
+    sosId: string,
+    type: string,
+    note: string,
+    by: string,
+  ) => void;
 };
 
 const AegisContext = createContext<Ctx | null>(null);
@@ -115,6 +154,31 @@ export function AegisProvider({ children }: { children: ReactNode }) {
   const [online, setOnline] = useState(true);
   const [lastSync, setLastSync] = useState("12 Aug 2026, 19:34 IST");
   const [planAgeMin, setPlanAgeMin] = useState(0);
+  const [dataSource, setDataSource] = useState<Ctx["dataSource"]>("loading");
+
+  const syncFromBackend = useCallback(async () => {
+    try {
+      const snapshot = await loadBackendSnapshot();
+      setSosList(snapshot.sosList);
+      setResources(snapshot.resources);
+      setCamps(snapshot.camps);
+      setFeedback(snapshot.feedback);
+      setLastSync(
+        new Date(snapshot.syncedAt).toLocaleString("en-IN", {
+          dateStyle: "medium",
+          timeStyle: "short",
+          timeZone: "Asia/Kolkata",
+        }),
+      );
+      setDataSource("postgres");
+    } catch {
+      setDataSource("demo");
+    }
+  }, []);
+
+  useEffect(() => {
+    void syncFromBackend();
+  }, [syncFromBackend]);
 
   const recommendations = useMemo(
     () =>
@@ -126,14 +190,26 @@ export function AegisProvider({ children }: { children: ReactNode }) {
     [sosList, resources],
   );
 
-  const assign = useCallback((sosId: string, resourceId: string, status: Status) => {
-    setSosList((list) =>
-      list.map((s) => (s.id === sosId ? { ...s, status, assignedResourceId: resourceId } : s)),
-    );
-    setResources((list) =>
-      list.map((r) => (r.id === resourceId ? { ...r, availability: "ENGAGED", lastUpdate: "just now" } : r)),
-    );
-  }, []);
+  const assign = useCallback(
+    (sosId: string, resourceId: string, status: Status) => {
+      setSosList((list) =>
+        list.map((s) =>
+          s.id === sosId ? { ...s, status, assignedResourceId: resourceId } : s,
+        ),
+      );
+      setResources((list) =>
+        list.map((r) =>
+          r.id === resourceId
+            ? { ...r, availability: "ENGAGED", lastUpdate: "just now" }
+            : r,
+        ),
+      );
+      void persistAssignment(sosId, resourceId, status).catch(() =>
+        setDataSource("demo"),
+      );
+    },
+    [],
+  );
 
   const value: Ctx = {
     sosList,
@@ -144,6 +220,7 @@ export function AegisProvider({ children }: { children: ReactNode }) {
     lastSync,
     planAgeMin,
     recommendations,
+    dataSource,
     setOnline: (v) => {
       setOnline(v);
       if (!v) setPlanAgeMin(0);
@@ -151,50 +228,78 @@ export function AegisProvider({ children }: { children: ReactNode }) {
     resync: () => {
       setOnline(true);
       setPlanAgeMin(0);
-      setLastSync("12 Aug 2026, " + new Date().toTimeString().slice(0, 5) + " IST");
+      void syncFromBackend();
     },
-    confirmDispatch: (sosId, resourceId) => assign(sosId, resourceId, "DISPATCHED"),
-    overrideAssign: (sosId, resourceId) => assign(sosId, resourceId, "ASSIGNED"),
-    rejectRecommendation: (sosId) =>
+    confirmDispatch: (sosId, resourceId) =>
+      assign(sosId, resourceId, "DISPATCHED"),
+    overrideAssign: (sosId, resourceId) =>
+      assign(sosId, resourceId, "ASSIGNED"),
+    rejectRecommendation: (sosId) => {
       setSosList((list) =>
         list.map((s) =>
-          s.id === sosId ? { ...s, status: "TRIAGED", notes: "Recommendation rejected by controller" } : s,
+          s.id === sosId
+            ? {
+                ...s,
+                status: "TRIAGED",
+                notes: "Recommendation rejected by controller",
+              }
+            : s,
         ),
-      ),
-    addSOS: (s) => setSosList((list) => [s, ...list]),
+      );
+      void persistSOSPatch(sosId, {
+        status: "TRIAGED",
+        notes: "Recommendation rejected by controller",
+      }).catch(() => setDataSource("demo"));
+    },
+    addSOS: (s) => {
+      setSosList((list) => [s, ...list]);
+      void persistSOS(s).catch(() => setDataSource("demo"));
+    },
     submitFeedback: (sosId, type, note, by) => {
-      setFeedback((list) => [
-        {
-          id: "FB-" + (list.length + 1),
-          sosId,
-          type,
-          by,
-          at: new Date().toTimeString().slice(0, 5),
-          note,
-        },
-        ...list,
-      ]);
+      const entry: FeedbackEntry = {
+        id: `FB-${Date.now()}`,
+        sosId,
+        type,
+        by,
+        at: new Date().toTimeString().slice(0, 5),
+        note,
+      };
+      setFeedback((list) => [entry, ...list]);
+      void persistFeedback(entry).catch(() => setDataSource("demo"));
       if (type === "Rescued") {
         const s = sosList.find((x) => x.id === sosId);
-        setSosList((list) => list.map((x) => (x.id === sosId ? { ...x, status: "RESCUED" } : x)));
+        setSosList((list) =>
+          list.map((x) => (x.id === sosId ? { ...x, status: "RESCUED" } : x)),
+        );
         setResources((list) =>
           list.map((r) =>
-            r.id === s?.assignedResourceId ? { ...r, availability: "AVAILABLE", lastUpdate: "just now" } : r,
+            r.id === s?.assignedResourceId
+              ? { ...r, availability: "AVAILABLE", lastUpdate: "just now" }
+              : r,
           ),
         );
         if (s)
           setCamps((list) =>
             list.map((c, i) =>
-              i === 0 ? { ...c, occupancy: Math.min(c.capacity, c.occupancy + s.people) } : c,
+              i === 0
+                ? {
+                    ...c,
+                    occupancy: Math.min(c.capacity, c.occupancy + s.people),
+                  }
+                : c,
             ),
           );
       }
       if (type === "Water rising" || type === "Still stranded")
-        setSosList((list) => list.map((x) => (x.id === sosId ? { ...x, status: "TRIAGED" } : x)));
+        setSosList((list) =>
+          list.map((x) => (x.id === sosId ? { ...x, status: "TRIAGED" } : x)),
+        );
     },
   };
 
-  return <AegisContext.Provider value={value}>{children}</AegisContext.Provider>;
+  return (
+    <AegisContext.Provider value={value}>{children}</AegisContext.Provider>
+  );
 }
 
 export function useAegis() {

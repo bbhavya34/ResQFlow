@@ -1,0 +1,7 @@
+.git
+.next
+node_modules
+backend/__pycache__
+backend/**/*.pyc
+dev-server*.log
+*.tsbuildinfo

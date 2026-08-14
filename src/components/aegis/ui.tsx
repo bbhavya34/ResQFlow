@@ -1,4 +1,9 @@
-import { priorityBand, priorityScore, type PriorityFactor, type Status } from "@/lib/aegis/data";
+import {
+  priorityBand,
+  priorityScore,
+  type PriorityFactor,
+  type Status,
+} from "@/lib/aegis/data";
 import type { ReactNode } from "react";
 
 export function StatCard({
@@ -26,20 +31,34 @@ export function StatCard({
     <div className="panel relative overflow-hidden p-4">
       <span className={`absolute inset-x-0 top-0 h-0.5 ${bar}`} />
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
         {icon && <span className="text-muted-foreground">{icon}</span>}
       </div>
-      <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">{value}</p>
+      <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">
+        {value}
+      </p>
       {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
     </div>
   );
 }
 
-export function SectionTitle({ title, desc, right }: { title: string; desc?: string; right?: ReactNode }) {
+export function SectionTitle({
+  title,
+  desc,
+  right,
+}: {
+  title: string;
+  desc?: string;
+  right?: ReactNode;
+}) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h2 className="text-lg font-semibold tracking-tight text-foreground">{title}</h2>
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">
+          {title}
+        </h2>
         {desc && <p className="mt-0.5 text-sm text-muted-foreground">{desc}</p>}
       </div>
       {right}
@@ -57,7 +76,9 @@ export function StatusBadge({ status }: { status: Status }) {
     CLOSED: "bg-muted text-muted-foreground border-border",
   };
   return (
-    <span className={`inline-flex rounded border px-2 py-0.5 text-[11px] font-semibold ${map[status]}`}>
+    <span
+      className={`inline-flex rounded border px-2 py-0.5 text-[11px] font-semibold ${map[status]}`}
+    >
       {status}
     </span>
   );
@@ -75,7 +96,9 @@ export function PriorityPill({ factors }: { factors: PriorityFactor[] }) {
           ? "bg-teal text-white"
           : "bg-muted text-muted-foreground";
   return (
-    <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-semibold ${cls}`}>
+    <span
+      className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-semibold ${cls}`}
+    >
       {score}/100 · {band.label}
     </span>
   );
@@ -99,7 +122,9 @@ export function PriorityBreakdown({ factors }: { factors: PriorityFactor[] }) {
               style={{ width: `${(f.value / f.max) * 100}%` }}
             />
           </div>
-          <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{f.note}</p>
+          <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+            {f.note}
+          </p>
         </div>
       ))}
       <div className="flex items-center justify-between border-t border-border pt-2 text-sm font-semibold">
