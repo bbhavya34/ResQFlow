@@ -36,7 +36,7 @@ export function MapPanel({
   zoom,
   initial,
   showControls = true,
-  showIndiaReset = false,
+  showIndiaReset = true,
 }: {
   height?: number;
   center?: [number, number];

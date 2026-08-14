@@ -29,11 +29,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-3 px-4 py-3">
           <Link href="/" className="flex items-center gap-3">
             <span className="grid size-9 place-items-center rounded-md brand-gradient text-sm font-bold text-white">
-              AB
+              FR
             </span>
             <span className="leading-tight">
               <span className="block text-[15px] font-semibold tracking-tight text-foreground">
-                Aegis Bharat
+                FloodRadar
               </span>
               <span className="block text-[11px] text-muted-foreground">
                 National Disaster Response Intelligence Platform
@@ -102,7 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <footer className="mt-8 border-t border-border bg-card">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-1 px-4 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>
-            Aegis Bharat · Integrated with SDMA / NDRF / IMD / CWC data feeds
+            FloodRadar · Integrated with SDMA / NDRF / IMD / CWC data feeds
             (demo dataset)
           </p>
           <p>Human-in-the-loop dispatch · No automatic deployment</p>

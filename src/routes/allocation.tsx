@@ -16,7 +16,7 @@ import { useAegis } from "@/lib/aegis/store";
 export const Route = definePage("/allocation")({
   head: () => ({
     meta: [
-      { title: "Smart Allocation & Human Confirmation — Aegis Bharat" },
+      { title: "Smart Allocation & Human Confirmation — FloodRadar" },
       {
         name: "description",
         content:
@@ -24,7 +24,7 @@ export const Route = definePage("/allocation")({
       },
       {
         property: "og:title",
-        content: "Smart Allocation & Human Confirmation — Aegis Bharat",
+        content: "Smart Allocation & Human Confirmation — FloodRadar",
       },
       {
         property: "og:description",

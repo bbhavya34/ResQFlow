@@ -5,14 +5,14 @@ import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: {
-    default: "Aegis Bharat — Disaster Response Platform",
-    template: "%s — Aegis Bharat",
+    default: "FloodRadar — Disaster Response Platform",
+    template: "%s — FloodRadar",
   },
   description:
     "Prototype command centre for SOS triage, resource allocation, safe routing and relief-camp operations.",
-  authors: [{ name: "Aegis Bharat" }],
+  authors: [{ name: "FloodRadar" }],
   openGraph: {
-    title: "Aegis Bharat — Disaster Response Platform",
+    title: "FloodRadar — Disaster Response Platform",
     description:
       "Unified disaster-response command centre prototype for India.",
     type: "website",

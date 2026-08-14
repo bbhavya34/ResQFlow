@@ -18,13 +18,13 @@ const TYPES = [
 export const Route = definePage("/field")({
   head: () => ({
     meta: [
-      { title: "Field Feedback Loop — Aegis Bharat" },
+      { title: "Field Feedback Loop — FloodRadar" },
       {
         name: "description",
         content:
           "Responders report rescued, still stranded, water rising, blocked roads and medical emergencies; the response plan updates immediately.",
       },
-      { property: "og:title", content: "Field Feedback Loop — Aegis Bharat" },
+      { property: "og:title", content: "Field Feedback Loop — FloodRadar" },
       {
         property: "og:description",
         content:

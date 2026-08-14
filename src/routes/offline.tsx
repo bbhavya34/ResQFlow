@@ -9,7 +9,7 @@ import { useAegis } from "@/lib/aegis/store";
 export const Route = definePage("/offline")({
   head: () => ({
     meta: [
-      { title: "Connectivity & Offline Resilience — Aegis Bharat" },
+      { title: "Connectivity & Offline Resilience — FloodRadar" },
       {
         name: "description",
         content:
@@ -17,7 +17,7 @@ export const Route = definePage("/offline")({
       },
       {
         property: "og:title",
-        content: "Connectivity & Offline Resilience — Aegis Bharat",
+        content: "Connectivity & Offline Resilience — FloodRadar",
       },
       {
         property: "og:description",

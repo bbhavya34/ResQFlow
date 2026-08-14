@@ -15,7 +15,7 @@ import { useAegis } from "@/lib/aegis/store";
 export const Route = definePage("/")({
   head: () => ({
     meta: [
-      { title: "Aegis Bharat — National Disaster Response Command Centre" },
+      { title: "FloodRadar — National Disaster Response Command Centre" },
       {
         name: "description",
         content:
@@ -23,7 +23,7 @@ export const Route = definePage("/")({
       },
       {
         property: "og:title",
-        content: "Aegis Bharat — Disaster Response Command Centre",
+        content: "FloodRadar — Disaster Response Command Centre",
       },
       {
         property: "og:description",

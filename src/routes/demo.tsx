@@ -6,13 +6,13 @@ import { definePage } from "@/lib/page-definition";
 export const Route = definePage("/demo")({
   head: () => ({
     meta: [
-      { title: "End-to-End Demo Run — Aegis Bharat" },
+      { title: "End-to-End Demo Run — FloodRadar" },
       {
         name: "description",
         content:
           "Walk the prototype chain: risk feed, SOS intake, priority 92, resource match, safe route, human confirmation, offline continuity, rescue and camp update.",
       },
-      { property: "og:title", content: "End-to-End Demo Run — Aegis Bharat" },
+      { property: "og:title", content: "End-to-End Demo Run — FloodRadar" },
       {
         property: "og:description",
         content: "The complete Indian flood response workflow in ten steps.",

@@ -15,7 +15,7 @@ import { useAegis } from "@/lib/aegis/store";
 export const Route = definePage("/sos")({
   head: () => ({
     meta: [
-      { title: "SOS Intake & Priority Engine — Aegis Bharat" },
+      { title: "SOS Intake & Priority Engine — FloodRadar" },
       {
         name: "description",
         content:
@@ -23,7 +23,7 @@ export const Route = definePage("/sos")({
       },
       {
         property: "og:title",
-        content: "SOS Intake & Priority Engine — Aegis Bharat",
+        content: "SOS Intake & Priority Engine — FloodRadar",
       },
       {
         property: "og:description",

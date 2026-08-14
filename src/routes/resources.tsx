@@ -8,13 +8,13 @@ import { useAegis } from "@/lib/aegis/store";
 export const Route = definePage("/resources")({
   head: () => ({
     meta: [
-      { title: "Resource Registry — Aegis Bharat" },
+      { title: "Resource Registry — FloodRadar" },
       {
         name: "description",
         content:
           "Unified registry of NDRF, SDRF, fire services, ambulances and verified civilian boats, vehicles and volunteers with live availability.",
       },
-      { property: "og:title", content: "Resource Registry — Aegis Bharat" },
+      { property: "og:title", content: "Resource Registry — FloodRadar" },
       {
         property: "og:description",
         content:

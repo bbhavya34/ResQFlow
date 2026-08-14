@@ -8,13 +8,13 @@ import { BLOCKED_ROADS, FLOOD_ZONES, SAFE_ROUTE } from "@/lib/aegis/data";
 export const Route = definePage("/map")({
   head: () => ({
     meta: [
-      { title: "GIS Operations Map — Aegis Bharat" },
+      { title: "GIS Operations Map — FloodRadar" },
       {
         name: "description",
         content:
           "Interactive Leaflet + OpenStreetMap view of Indian flood zones, SOS requests, rescue resources, relief camps, hospitals and safe routes.",
       },
-      { property: "og:title", content: "GIS Operations Map — Aegis Bharat" },
+      { property: "og:title", content: "GIS Operations Map — FloodRadar" },
       {
         property: "og:description",
         content:
