@@ -1,11 +1,11 @@
-# FloodRadar
+# ResQFlow
 
 Prototype disaster-response command centre aligned to the proposed production stack.
 
 ## Implemented stack
 
 - **Frontend:** Next.js App Router, React, TypeScript, Tailwind CSS
-- **Maps:** Leaflet with OpenStreetMap tiles
+- **Maps:** Leaflet with OpenFloodGauge as the default managed flood layer
 - **Backend:** Django and Django REST Framework
 - **Database:** PostgreSQL 17 with PostGIS 3.5 spatial fields and indexes
 - **API integration:** same-origin Next.js proxy with PostgreSQL-backed reads and writes
@@ -31,7 +31,7 @@ docker compose up --build
 ```
 
 Open `http://localhost:3000`. The Django API is available at
-`http://localhost:8000/api/v1/`, and PostgreSQL is exposed on port `5432`.
+`http://localhost:8001/api/v1/`, and PostgreSQL is exposed on port `5432`.
 
 The backend automatically applies migrations and idempotently seeds demo data.
 
@@ -44,7 +44,12 @@ npm run dev
 ```
 
 The frontend proxies `/backend/*` to `DJANGO_API_URL`, which defaults to
-`http://127.0.0.1:8000` for local development.
+`http://127.0.0.1:8001` for local development. Port `8001` is used to avoid
+collisions with other Django services commonly running on port `8000`.
+
+Set `NEXT_PUBLIC_OPENFLOODGAUGE_TILE_URL` to the customer-specific OpenFloodGauge
+Tile/WMTS URL before deployment. The app uses OpenFloodGauge by default and keeps
+the URL configurable because access is issued per customer.
 
 ## API endpoints
 

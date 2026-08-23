@@ -15,7 +15,7 @@ import { useAegis } from "@/lib/aegis/store";
 export const Route = definePage("/sos")({
   head: () => ({
     meta: [
-      { title: "SOS Intake & Priority Engine — FloodRadar" },
+      { title: "SOS Intake & Priority Engine — ResQFlow" },
       {
         name: "description",
         content:
@@ -23,7 +23,7 @@ export const Route = definePage("/sos")({
       },
       {
         property: "og:title",
-        content: "SOS Intake & Priority Engine — FloodRadar",
+        content: "SOS Intake & Priority Engine — ResQFlow",
       },
       {
         property: "og:description",
@@ -269,7 +269,6 @@ export default function SosPage() {
             />
             <MapPanel
               height={380}
-              showControls={false}
               center={[selected.lat, selected.lng]}
               zoom={11}
               initial={{ hospitals: true, shelters: true }}

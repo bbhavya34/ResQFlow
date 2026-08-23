@@ -1,13 +1,26 @@
 "use client";
 
+import dynamic from "next/dynamic";
+import { useState } from "react";
 import { definePage } from "@/lib/page-definition";
 import { SectionTitle, StatCard } from "@/components/aegis/ui";
 import { useAegis } from "@/lib/aegis/store";
 
+const ReliefCampMap = dynamic(
+  () =>
+    import("@/components/aegis/ReliefCampMap").then((mod) => mod.ReliefCampMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[420px] animate-pulse rounded-md bg-muted" />
+    ),
+  },
+);
+
 export const Route = definePage("/camps")({
   head: () => ({
     meta: [
-      { title: "Relief Camp Operations — FloodRadar" },
+      { title: "Relief Camp Operations — ResQFlow" },
       {
         name: "description",
         content:
@@ -15,7 +28,7 @@ export const Route = definePage("/camps")({
       },
       {
         property: "og:title",
-        content: "Relief Camp Operations — FloodRadar",
+        content: "Relief Camp Operations — ResQFlow",
       },
       {
         property: "og:description",
@@ -31,6 +44,9 @@ export default function CampsPage() {
   const { camps } = useAegis();
   const occupancy = camps.reduce((n, c) => n + c.occupancy, 0);
   const capacity = camps.reduce((n, c) => n + c.capacity, 0);
+  const availableCamps = camps.filter((c) => c.occupancy < c.capacity);
+  const [selectedCampId, setSelectedCampId] = useState("");
+  const focusedCampId = selectedCampId || availableCamps[0]?.id;
 
   return (
     <div className="space-y-6">
@@ -147,33 +163,62 @@ export default function CampsPage() {
         })}
       </div>
 
-      <div className="panel p-4">
-        <SectionTitle
-          title="Supply requisition queue"
-          desc="Auto-raised from camp stock thresholds; district collector approval pending."
-        />
-        <table className="w-full text-sm">
-          <thead className="text-[11px] uppercase text-muted-foreground">
-            <tr>
-              <th className="py-2 text-left">Camp</th>
-              <th className="py-2 text-left">Item</th>
-              <th className="py-2 text-left">Priority</th>
-            </tr>
-          </thead>
-          <tbody>
-            {camps.flatMap((c) =>
-              c.urgent.map((u) => (
-                <tr key={c.id + u} className="border-t border-border">
-                  <td className="py-2">{c.name}</td>
-                  <td className="py-2">{u}</td>
-                  <td className="py-2 text-xs">
-                    {c.status === "CRITICAL" ? "Immediate" : "Within 24 hrs"}
-                  </td>
-                </tr>
-              )),
-            )}
-          </tbody>
-        </table>
+      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <div className="panel p-4">
+          <SectionTitle
+            title="Supply requisition queue"
+            desc="Auto-raised from camp stock thresholds; district collector approval pending."
+          />
+          <table className="w-full text-sm">
+            <thead className="text-[11px] uppercase text-muted-foreground">
+              <tr>
+                <th className="py-2 text-left">Camp</th>
+                <th className="py-2 text-left">Item</th>
+                <th className="py-2 text-left">Priority</th>
+              </tr>
+            </thead>
+            <tbody>
+              {camps.flatMap((c) =>
+                c.urgent.map((u) => (
+                  <tr key={c.id + u} className="border-t border-border">
+                    <td className="py-2">{c.name}</td>
+                    <td className="py-2">{u}</td>
+                    <td className="py-2 text-xs">
+                      {c.status === "CRITICAL" ? "Immediate" : "Within 24 hrs"}
+                    </td>
+                  </tr>
+                )),
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="panel p-4">
+          <SectionTitle
+            title="Relief camp availability map"
+            desc="Select an available camp to inspect its location, occupancy and supplies."
+          />
+          <label className="mb-3 block text-xs font-semibold text-muted-foreground">
+            Available relief camp
+            <select
+              value={focusedCampId ?? ""}
+              onChange={(event) => setSelectedCampId(event.target.value)}
+              className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+            >
+              {availableCamps.map((camp) => (
+                <option key={camp.id} value={camp.id}>
+                  {camp.name} — {camp.capacity - camp.occupancy} places
+                  available
+                </option>
+              ))}
+            </select>
+          </label>
+          <ReliefCampMap
+            camps={camps}
+            selectedCampId={focusedCampId}
+            height={340}
+          />
+        </div>
       </div>
     </div>
   );

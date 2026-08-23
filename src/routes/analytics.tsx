@@ -21,13 +21,16 @@ import { ANALYTICS } from "@/lib/aegis/data";
 export const Route = definePage("/analytics")({
   head: () => ({
     meta: [
-      { title: "Response Analytics — FloodRadar" },
+      { title: "Response Analytics — ResQFlow" },
       {
         name: "description",
         content:
           "Prototype SOS trends, response time, people rescued, resource utilisation, flood-risk alerts and camp occupancy.",
       },
-      { property: "og:title", content: "Response Analytics — FloodRadar" },
+      {
+        property: "og:title",
+        content: "Response Analytics — ResQFlow",
+      },
       {
         property: "og:description",
         content: "Operational analytics for India's flood response programme.",

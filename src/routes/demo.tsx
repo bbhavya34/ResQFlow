@@ -6,13 +6,16 @@ import { definePage } from "@/lib/page-definition";
 export const Route = definePage("/demo")({
   head: () => ({
     meta: [
-      { title: "End-to-End Demo Run — FloodRadar" },
+      { title: "End-to-End Demo Run — ResQFlow" },
       {
         name: "description",
         content:
           "Walk the prototype chain: risk feed, SOS intake, priority 92, resource match, safe route, human confirmation, offline continuity, rescue and camp update.",
       },
-      { property: "og:title", content: "End-to-End Demo Run — FloodRadar" },
+      {
+        property: "og:title",
+        content: "End-to-End Demo Run — ResQFlow",
+      },
       {
         property: "og:description",
         content: "The complete Indian flood response workflow in ten steps.",
@@ -115,30 +118,6 @@ export default function DemoPage() {
           </li>
         ))}
       </ol>
-
-      <div className="panel p-5">
-        <h2 className="text-sm font-semibold">Reference architecture</h2>
-        <div className="mt-3 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ["Frontend", "Next.js · TypeScript · Tailwind CSS"],
-            ["Backend (next phase)", "Django + Django REST Framework"],
-            ["Database", "PostgreSQL + PostGIS"],
-            ["Maps", "Leaflet + OpenStreetMap"],
-            ["Prototype data", "Typed fixtures · React state"],
-            ["Optimisation (next phase)", "Google OR-Tools"],
-            ["Routing (next phase)", "NetworkX over OSM graphs"],
-            ["Realtime (next phase)", "WebSockets + Redis"],
-            ["Tasks (next phase)", "Celery workers"],
-            ["Deployment", "Docker · Vercel · Render / AWS"],
-            ["AI / ML", "Deferred beyond prototype"],
-          ].map(([k, v]) => (
-            <div key={k} className="rounded-md border border-border p-3">
-              <p className="font-semibold text-foreground">{k}</p>
-              <p className="mt-1 text-muted-foreground">{v}</p>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

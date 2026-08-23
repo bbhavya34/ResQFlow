@@ -7,7 +7,7 @@ import { useAegis } from "@/lib/aegis/store";
 
 const NAV = [
   { to: "/", label: "Command Centre" },
-  { to: "/map", label: "GIS Map" },
+  { to: "/map", label: "Operations Map" },
   { to: "/sos", label: "SOS Requests" },
   { to: "/resources", label: "Resources" },
   { to: "/allocation", label: "Allocation" },
@@ -29,11 +29,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-3 px-4 py-3">
           <Link href="/" className="flex items-center gap-3">
             <span className="grid size-9 place-items-center rounded-md brand-gradient text-sm font-bold text-white">
-              FR
+              RQ
             </span>
             <span className="leading-tight">
               <span className="block text-[15px] font-semibold tracking-tight text-foreground">
-                FloodRadar
+                ResQFlow
               </span>
               <span className="block text-[11px] text-muted-foreground">
                 National Disaster Response Intelligence Platform
@@ -100,12 +100,57 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="mx-auto max-w-[1600px] px-4 py-6">{children}</main>
 
       <footer className="mt-8 border-t border-border bg-card">
-        <div className="mx-auto flex max-w-[1600px] flex-col gap-1 px-4 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            FloodRadar · Integrated with SDMA / NDRF / IMD / CWC data feeds
-            (demo dataset)
-          </p>
-          <p>Human-in-the-loop dispatch · No automatic deployment</p>
+        <div className="mx-auto grid max-w-[1600px] gap-6 px-4 py-7 md:grid-cols-[1.2fr_1fr_1.2fr]">
+          <div>
+            <Link href="/" className="flex items-center gap-2.5">
+              <span className="grid size-8 place-items-center rounded-md brand-gradient text-xs font-bold text-white">
+                RQ
+              </span>
+              <span className="text-sm font-semibold text-foreground">
+                ResQFlow
+              </span>
+            </Link>
+            <p className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground">
+              A unified command platform for coordinated flood response,
+              resource visibility and relief operations.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
+              Operations
+            </p>
+            <nav className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+              <Link href="/map" className="hover:text-primary">
+                Live map
+              </Link>
+              <Link href="/sos" className="hover:text-primary">
+                SOS requests
+              </Link>
+              <Link href="/resources" className="hover:text-primary">
+                Resources
+              </Link>
+              <Link href="/camps" className="hover:text-primary">
+                Relief camps
+              </Link>
+            </nav>
+          </div>
+
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
+              Operational notice
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+              Verify current field conditions and obtain authorization from the
+              responsible response controller before deployment.
+            </p>
+          </div>
+        </div>
+        <div className="border-t border-border/70">
+          <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-2 px-4 py-3 text-[11px] text-muted-foreground">
+            <p>© 2026 ResQFlow. All rights reserved.</p>
+            <p>India flood response coordination platform</p>
+          </div>
         </div>
       </footer>
     </div>

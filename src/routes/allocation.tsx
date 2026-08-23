@@ -3,20 +3,33 @@
 import { definePage } from "@/lib/page-definition";
 import { useState } from "react";
 import { toast } from "sonner";
-import { MapPanel } from "@/components/aegis/MapPanel";
+import dynamic from "next/dynamic";
+
+const ReliefCampMap = dynamic(
+  () =>
+    import("@/components/aegis/ReliefCampMap").then((mod) => mod.ReliefCampMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[340px] w-full animate-pulse rounded-md border border-border bg-muted" />
+    ),
+  },
+);
 import {
   PriorityBreakdown,
   PriorityPill,
   SectionTitle,
   StatusBadge,
 } from "@/components/aegis/ui";
-import { SAFE_ROUTE, priorityScore } from "@/lib/aegis/data";
-import { useAegis } from "@/lib/aegis/store";
+import { priorityScore } from "@/lib/aegis/data";
+import { haversine, useAegis } from "@/lib/aegis/store";
 
 export const Route = definePage("/allocation")({
   head: () => ({
     meta: [
-      { title: "Smart Allocation & Human Confirmation — FloodRadar" },
+      {
+        title: "Smart Allocation & Human Confirmation — ResQFlow",
+      },
       {
         name: "description",
         content:
@@ -24,7 +37,7 @@ export const Route = definePage("/allocation")({
       },
       {
         property: "og:title",
-        content: "Smart Allocation & Human Confirmation — FloodRadar",
+        content: "Smart Allocation & Human Confirmation — ResQFlow",
       },
       {
         property: "og:description",
@@ -41,14 +54,41 @@ export default function AllocationPage() {
     recommendations,
     resources,
     sosList,
+    camps,
     confirmDispatch,
     overrideAssign,
     rejectRecommendation,
   } = useAegis();
   const [override, setOverride] = useState<Record<string, string>>({});
+  const [routeSosId, setRouteSosId] = useState("");
   const dispatched = sosList.filter(
     (s) => s.status === "DISPATCHED" || s.status === "ASSIGNED",
   );
+  const routeSos =
+    sosList.find((s) => s.id === routeSosId) ??
+    recommendations[0]?.sos ??
+    dispatched[0];
+  const recommendedVehicle = routeSos
+    ? recommendations.find((rec) => rec.sos.id === routeSos.id)?.resource
+    : undefined;
+  const assignedVehicle = routeSos?.assignedResourceId
+    ? resources.find((resource) => resource.id === routeSos.assignedResourceId)
+    : undefined;
+  const nearestVehicle = routeSos
+    ? resources
+        .filter((resource) => resource.availability !== "MAINTENANCE")
+        .slice()
+        .sort((a, b) => haversine(routeSos, a) - haversine(routeSos, b))[0]
+    : undefined;
+  const routeVehicle = recommendedVehicle ?? assignedVehicle ?? nearestVehicle;
+  const nearestCamp = routeSos
+    ? camps
+        .filter((camp) => camp.occupancy < camp.capacity)
+        .slice()
+        .sort((a, b) => haversine(routeSos, a) - haversine(routeSos, b))[0]
+    : undefined;
+  const campDistanceKm =
+    routeSos && nearestCamp ? haversine(routeSos, nearestCamp) : 0;
 
   return (
     <div className="space-y-6">
@@ -257,14 +297,35 @@ export default function AllocationPage() {
         </div>
         <div className="panel p-4">
           <SectionTitle
-            title="Safe route preview"
-            desc={`${SAFE_ROUTE.resourceId} → SOS ${SAFE_ROUTE.sosId} · ${SAFE_ROUTE.km} km · ${SAFE_ROUTE.etaMin} min · flooded segments avoided`}
+            title="Route to nearest available relief camp"
+            desc={
+              routeSos && nearestCamp
+                ? `${routeVehicle?.name ?? "Rescue vehicle"} → SOS ${routeSos.id} → ${nearestCamp.name} · ${campDistanceKm.toFixed(1)} km SOS-to-camp proximity · ${nearestCamp.capacity - nearestCamp.occupancy} places available`
+                : "No SOS and available relief-camp pairing found."
+            }
           />
-          <MapPanel
+          <label className="mb-3 block text-xs font-semibold text-muted-foreground">
+            Route SOS request
+            <select
+              value={routeSos?.id ?? ""}
+              onChange={(event) => setRouteSosId(event.target.value)}
+              className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+            >
+              {sosList
+                .filter((s) => s.status !== "CLOSED")
+                .map((s) => (
+                  <option key={s.id} value={s.id}>
+                    SOS {s.id} — {s.place} ({s.people} people)
+                  </option>
+                ))}
+            </select>
+          </label>
+          <ReliefCampMap
+            camps={camps}
+            sos={routeSos}
+            vehicle={routeVehicle}
+            selectedCampId={nearestCamp?.id}
             height={340}
-            showControls={false}
-            center={[9.946, 76.28]}
-            zoom={13}
           />
         </div>
       </div>

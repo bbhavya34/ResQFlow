@@ -18,13 +18,16 @@ const TYPES = [
 export const Route = definePage("/field")({
   head: () => ({
     meta: [
-      { title: "Field Feedback Loop — FloodRadar" },
+      { title: "Field Feedback Loop — ResQFlow" },
       {
         name: "description",
         content:
           "Responders report rescued, still stranded, water rising, blocked roads and medical emergencies; the response plan updates immediately.",
       },
-      { property: "og:title", content: "Field Feedback Loop — FloodRadar" },
+      {
+        property: "og:title",
+        content: "Field Feedback Loop — ResQFlow",
+      },
       {
         property: "og:description",
         content:
