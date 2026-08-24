@@ -27,17 +27,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="h-1 w-full brand-gradient" />
       <header className="sticky top-0 z-[900] border-b border-border bg-card/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-3 px-4 py-3">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="grid size-9 place-items-center rounded-md brand-gradient text-sm font-bold text-white">
-              RQ
+          <Link href="/" className="leading-tight">
+            <span className="block text-[15px] font-semibold tracking-tight text-foreground">
+              ResQFlow
             </span>
-            <span className="leading-tight">
-              <span className="block text-[15px] font-semibold tracking-tight text-foreground">
-                ResQFlow
-              </span>
-              <span className="block text-[11px] text-muted-foreground">
-                National Disaster Response Intelligence Platform
-              </span>
+            <span className="block text-[11px] text-muted-foreground">
+              National Disaster Response Intelligence Platform
             </span>
           </Link>
           <div className="ml-auto flex items-center gap-3">
@@ -95,13 +90,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <footer className="mt-8 border-t border-border bg-card">
         <div className="mx-auto grid max-w-[1600px] gap-6 px-4 py-7 md:grid-cols-[1.2fr_1fr_1.2fr]">
           <div>
-            <Link href="/" className="flex items-center gap-2.5">
-              <span className="grid size-8 place-items-center rounded-md brand-gradient text-xs font-bold text-white">
-                RQ
-              </span>
-              <span className="text-sm font-semibold text-foreground">
-                ResQFlow
-              </span>
+            <Link href="/" className="text-sm font-semibold text-foreground">
+              ResQFlow
             </Link>
             <p className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground">
               A unified command platform for coordinated flood response,
