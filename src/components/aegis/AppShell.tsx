@@ -20,7 +20,7 @@ const NAV = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { online, lastSync, setOnline, dataSource } = useAegis();
+  const { online, lastSync, setOnline } = useAegis();
 
   return (
     <div className="min-h-screen bg-background">
@@ -44,13 +44,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="hidden text-right sm:block">
               <p className="text-[11px] text-muted-foreground">Last sync</p>
               <p className="text-xs font-medium text-foreground">{lastSync}</p>
-              <p className="text-[10px] font-medium text-muted-foreground">
-                {dataSource === "postgres"
-                  ? "PostgreSQL + PostGIS"
-                  : dataSource === "loading"
-                    ? "Connecting to backend…"
-                    : "Demo fallback data"}
-              </p>
             </div>
             <button
               onClick={() => setOnline(!online)}
