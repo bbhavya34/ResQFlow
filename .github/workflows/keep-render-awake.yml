@@ -1,0 +1,20 @@
+name: Keep Render backend awake
+
+on:
+  schedule:
+    # Every 10 minutes, offset from the top of the hour to reduce queue delays.
+    - cron: "7,17,27,37,47,57 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping-health-endpoint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render health endpoint
+        run: >-
+          curl --fail --silent --show-error
+          --retry 3 --retry-all-errors --connect-timeout 20 --max-time 90
+          https://resqflow-nogx.onrender.com/api/v1/health/
