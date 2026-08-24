@@ -1,10 +1,15 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { definePage } from "@/lib/page-definition";
 import { SectionTitle, StatCard } from "@/components/aegis/ui";
 import { useAegis } from "@/lib/aegis/store";
+import {
+  buildCampForecasts,
+  type CampForecastRisk,
+  type ForecastHorizon,
+} from "@/lib/aegis/campForecast";
 
 const ReliefCampMap = dynamic(
   () =>
@@ -41,13 +46,20 @@ export const Route = definePage("/camps")({
 });
 
 export default function CampsPage() {
-  const { camps } = useAegis();
+  const { camps, sosList } = useAegis();
   const occupancy = camps.reduce((n, c) => n + c.occupancy, 0);
   const capacity = camps.reduce((n, c) => n + c.capacity, 0);
   const availableCamps = camps.filter((c) => c.occupancy < c.capacity);
   const [selectedCampId, setSelectedCampId] = useState("");
+  const [forecastHorizon, setForecastHorizon] = useState<ForecastHorizon>(24);
   const focusedCampId = selectedCampId || availableCamps[0]?.id;
-
+  const forecasts = useMemo(
+    () => buildCampForecasts(camps, sosList, forecastHorizon),
+    [camps, sosList, forecastHorizon],
+  );
+  const campsNeedingAction = forecasts.filter(
+    (forecast) => forecast.risk === "CRITICAL" || forecast.risk === "HIGH",
+  ).length;
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -72,6 +84,113 @@ export default function CampsPage() {
           value={camps.reduce((n, c) => n + c.urgent.length, 0)}
           tone="warn"
         />
+      </div>
+
+      <div className="panel overflow-hidden">
+        <div className="border-b border-border p-4">
+          <SectionTitle
+            title="Camp demand & supply forecast"
+            desc="Projects arrivals from active SOS demand, then estimates capacity, food, water and medical pressure. Prototype estimate — deterministic, not a trained AI model."
+            right={
+              <div className="flex items-center gap-1 rounded-md border border-border bg-muted/40 p-1">
+                {([6, 12, 24] as const).map((hours) => (
+                  <button
+                    key={hours}
+                    type="button"
+                    onClick={() => setForecastHorizon(hours)}
+                    className={`rounded px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      forecastHorizon === hours
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {hours}h
+                  </button>
+                ))}
+              </div>
+            }
+          />
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="rounded bg-destructive/10 px-2.5 py-1 font-medium text-destructive">
+              {campsNeedingAction} camp{campsNeedingAction === 1 ? "" : "s"}{" "}
+              need action
+            </span>
+            <span className="rounded bg-muted px-2.5 py-1 text-muted-foreground">
+              Forecast horizon: next {forecastHorizon} hours
+            </span>
+            <span className="rounded bg-muted px-2.5 py-1 text-muted-foreground">
+              Human review required before requisition or diversion
+            </span>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[920px] text-sm">
+            <thead className="bg-muted/40 text-[11px] uppercase text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 text-left">Camp</th>
+                <th className="px-3 py-3 text-left">Forecast risk</th>
+                <th className="px-3 py-3 text-left">Demand</th>
+                <th className="px-3 py-3 text-left">Supply cover</th>
+                <th className="px-3 py-3 text-left">Why flagged</th>
+                <th className="px-4 py-3 text-left">Recommended action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {forecasts.map((forecast) => (
+                <tr
+                  key={forecast.camp.id}
+                  className="border-t border-border align-top"
+                >
+                  <td className="px-4 py-3">
+                    <p className="font-semibold">{forecast.camp.name}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {forecast.camp.district}, {forecast.camp.state}
+                    </p>
+                  </td>
+                  <td className="px-3 py-3">
+                    <ForecastRiskBadge
+                      risk={forecast.risk}
+                      score={forecast.riskScore}
+                    />
+                  </td>
+                  <td className="px-3 py-3 tabular-nums">
+                    <p className="font-medium">
+                      +{forecast.projectedArrivals} arrivals
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {forecast.projectedOccupancy}/{forecast.camp.capacity} (
+                      {forecast.projectedOccupancyPct}%)
+                    </p>
+                  </td>
+                  <td className="px-3 py-3 text-xs tabular-nums">
+                    <p>Food: {forecast.foodHoursRemaining}h</p>
+                    <p className="mt-1">
+                      Water: {forecast.waterHoursRemaining}h
+                    </p>
+                    <p className="mt-1 text-muted-foreground">
+                      {Number.isFinite(forecast.peoplePerMedic)
+                        ? `${forecast.peoplePerMedic} people/medic`
+                        : "No medic recorded"}
+                    </p>
+                  </td>
+                  <td className="max-w-[260px] px-3 py-3 text-xs leading-relaxed text-muted-foreground">
+                    {forecast.reasons.slice(0, 2).join(" · ")}
+                  </td>
+                  <td className="max-w-[280px] px-4 py-3 text-xs font-medium leading-relaxed">
+                    {forecast.actions[0]}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="border-t border-border bg-muted/25 px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">
+          Method: active SOS cases are mapped by district or state. Expected
+          arrivals scale by the selected horizon; food and water cover are
+          adjusted for average projected occupancy. Risk combines capacity,
+          minimum supply cover, medical load and unresolved requisitions.
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -221,5 +340,30 @@ export default function CampsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ForecastRiskBadge({
+  risk,
+  score,
+}: {
+  risk: CampForecastRisk;
+  score: number;
+}) {
+  const className =
+    risk === "CRITICAL"
+      ? "bg-destructive/10 text-destructive border-destructive/20"
+      : risk === "HIGH"
+        ? "bg-amber/20 text-[oklch(0.45_0.13_75)] border-amber/30"
+        : risk === "WATCH"
+          ? "bg-primary/10 text-primary border-primary/20"
+          : "bg-green/15 text-[oklch(0.42_0.11_155)] border-green/25";
+
+  return (
+    <span
+      className={`inline-flex whitespace-nowrap rounded border px-2 py-0.5 text-[11px] font-semibold ${className}`}
+    >
+      {risk} · {score}/100
+    </span>
   );
 }
