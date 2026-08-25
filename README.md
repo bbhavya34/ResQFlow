@@ -151,62 +151,6 @@ npm run dev
 
 The frontend uses `http://127.0.0.1:8001` by default for the API proxy.
 
-## Environment variables
-
-### Vercel frontend
-
-```env
-DJANGO_API_URL=https://<your-render-api>.onrender.com
-NEXT_PUBLIC_OPENFLOODGAUGE_TILE_URL=<optional-tile-template-or-WMTS-url>
-```
-
-`DJANGO_API_URL` is server-only. Only values prefixed with `NEXT_PUBLIC_` are
-visible to browser code.
-
-### Render Django service
-
-```env
-DJANGO_SECRET_KEY=<long-random-secret>
-DJANGO_DEBUG=false
-DJANGO_ALLOWED_HOSTS=<your-render-api>.onrender.com
-CORS_ALLOWED_ORIGINS=https://<your-vercel-project>.vercel.app
-POSTGRES_DB=<render-database-name>
-POSTGRES_USER=<render-database-user>
-POSTGRES_PASSWORD=<render-database-password>
-POSTGRES_HOST=<render-internal-database-host>
-POSTGRES_PORT=5432
-```
-
-Use the Render database's internal connection values. `DJANGO_ALLOWED_HOSTS`
-uses hostnames only; `CORS_ALLOWED_ORIGINS` uses complete HTTPS origins.
-
-## Deploy
-
-1. Create a Render PostgreSQL service in the same region as the API.
-2. Create a Render **Docker Web Service** from this repository with:
-
-   ```text
-   Root Directory: backend
-   Dockerfile Path: ./Dockerfile
-   Docker Build Context Directory: .
-   Docker Command: leave blank
-   ```
-
-   The backend container automatically applies migrations, seeds demo data, and
-   binds to Render's `PORT`.
-
-3. Set the Render variables above and deploy. Confirm:
-
-   ```text
-   https://<your-render-api>.onrender.com/api/v1/health/
-   ```
-
-4. Import the repository into Vercel as a **Next.js** project with root
-   directory `./`. Set `DJANGO_API_URL` to the Render API origin and deploy.
-5. Copy the Vercel production domain into Render's `CORS_ALLOWED_ORIGINS`, then
-   redeploy the Django API.
-6. If using a third-party keep-alive service, send a `GET` request every ten
-   minutes to the Render health URL from step 3.
 
 ## Verify
 
