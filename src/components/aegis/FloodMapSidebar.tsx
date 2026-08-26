@@ -62,6 +62,7 @@ export function FloodMapSidebar({
   } = useMapStore();
   const [basemapsOpen, setBasemapsOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
+  const [floodedFeaturesOpen, setFloodedFeaturesOpen] = useState(false);
   const activeCount = Object.values(overlays).filter(Boolean).length;
 
   return (
@@ -81,14 +82,32 @@ export function FloodMapSidebar({
         </button>
       </div>
 
-      <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 text-sm font-semibold text-orange-600">
-        <span className="grid size-6 place-items-center rounded-sm bg-orange-500 text-[11px] font-black text-white">
-          !
-        </span>
-        <span>192 Flooded Features</span>
-      </div>
-
       <div className="min-h-0 flex-1 overflow-y-auto">
+        <section className="border-b border-slate-200">
+          <button
+            type="button"
+            onClick={() => setFloodedFeaturesOpen((value) => !value)}
+            className="flex w-full items-center justify-between px-5 py-3 text-left font-semibold hover:bg-slate-50"
+          >
+            <span className="flex items-center gap-3">
+              <span className="grid size-6 place-items-center rounded-sm bg-orange-500 text-[11px] font-black text-white">
+                !
+              </span>
+              <span className="text-sm text-orange-600">192 Flooded Features</span>
+            </span>
+            {floodedFeaturesOpen ? (
+              <ChevronUp className="size-4" />
+            ) : (
+              <ChevronDown className="size-4" />
+            )}
+          </button>
+          {floodedFeaturesOpen && (
+            <div className="border-t border-slate-200 px-4 py-3 text-sm">
+              <p className="text-slate-600">Flooded areas and critical infrastructure affected by the current flood event.</p>
+            </div>
+          )}
+        </section>
+
         <section className="border-b border-slate-200">
           <button
             type="button"
