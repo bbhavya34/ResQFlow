@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useAegis } from "@/lib/aegis/store";
 
 const NAV = [
@@ -21,7 +21,13 @@ const NAV = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { online, lastSync, setOnline } = useAegis();
+  const { online, lastSync } = useAegis();
+
+  // Prevent hydration mismatch: the online state is only known client-side
+  // after the connectivity probe. Render a neutral badge on the server and
+  // swap in the real status after mount.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,15 +49,19 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
             <div
               className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-semibold ${
-                online
+                !mounted
+                  ? "border-border bg-card text-muted-foreground"
+                  : online
                   ? "border-emerald-500/30 bg-emerald-950/40 text-emerald-400"
                   : "border-red-500/40 bg-red-950/50 text-red-400"
               }`}
             >
               <span
-                className={`size-2 rounded-full ${online ? "bg-emerald-400" : "bg-red-400 animate-pulse"}`}
+                className={`size-2 rounded-full ${
+                  !mounted ? "bg-muted-foreground" : online ? "bg-emerald-400" : "bg-red-400 animate-pulse"
+                }`}
               />
-              {online ? "ONLINE" : "OFFLINE MODE"}
+              {!mounted ? "CHECKING..." : online ? "ONLINE" : "OFFLINE MODE"}
             </div>
           </div>
         </div>
@@ -78,10 +88,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
       </header>
 
-      {!online && (
-        <div className="border-b border-amber/40 bg-amber/10 px-4 py-2 text-center text-xs font-medium text-[oklch(0.42_0.13_75)]">
-          Connectivity degraded — operating on the cached response plan. Field
-          operations continue offline.
+      {mounted && !online && (
+        <div className="border-b border-red-500/30 bg-red-950/30 px-4 py-2 text-center text-xs font-medium text-red-400">
+          ⚠ OFFLINE MODE — Operating on cached emergency plan. All field operations continue offline.
         </div>
       )}
 
