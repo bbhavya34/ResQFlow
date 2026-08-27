@@ -178,6 +178,27 @@ export function AegisProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void syncFromBackend();
+
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    setOnline(navigator.onLine);
+    const handleOnline = () => {
+      setOnline(true);
+      void syncFromBackend();
+    };
+    const handleOffline = () => {
+      setOnline(false);
+      setDataSource("demo");
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, [syncFromBackend]);
 
   const recommendations = useMemo(
