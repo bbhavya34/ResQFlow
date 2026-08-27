@@ -8,6 +8,7 @@ import { useAegis } from "@/lib/aegis/store";
 const NAV = [
   { to: "/", label: "Command Centre" },
   { to: "/map", label: "Operations Map" },
+  { to: "/offline-sos", label: "🧭 Offline SOS" },
   { to: "/sos", label: "SOS Requests" },
   { to: "/resources", label: "Resources" },
   { to: "/allocation", label: "Allocation" },
