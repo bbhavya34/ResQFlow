@@ -45,14 +45,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={() => setOnline(!online)}
               className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-semibold ${
                 online
-                  ? "border-green/30 bg-green/10 text-[oklch(0.42_0.11_155)]"
-                  : "border-amber/40 bg-amber/15 text-[oklch(0.45_0.13_75)]"
+                  ? "border-emerald-500/30 bg-emerald-950/40 text-emerald-400"
+                  : "border-red-500/40 bg-red-950/50 text-red-400"
               }`}
             >
               <span
-                className={`size-2 rounded-full ${online ? "bg-green" : "bg-amber"}`}
+                className={`size-2 rounded-full ${online ? "bg-emerald-400" : "bg-red-400 animate-pulse"}`}
               />
-              {online ? "ONLINE" : "DEGRADED MODE"}
+              {online ? "ONLINE" : "OFFLINE MODE"}
             </button>
           </div>
         </div>

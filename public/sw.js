@@ -172,7 +172,7 @@ self.addEventListener("message", (event) => {
       body: `Vector: ${cardinalHeading || "Target"} (${bearingAngle || 0}°) · Distance: ${distanceKm || "?"} km. Follow offline compass now.`,
       icon: "/icon.png",
       badge: "/icon.png",
-      tag: "qflow-flood-sos",
+      tag: `qflow-flood-sos-${Date.now()}`,
       requireInteraction: true,
       renotify: true,
       vibrate: [300, 100, 300, 100, 300],

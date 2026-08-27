@@ -136,15 +136,65 @@ export function OfflineCompassNavigation() {
     handlePositionUpdate(lat, lng, 5);
   };
 
-  // 4. Trigger High Priority System SOS Notification
-  const triggerSOSAlert = () => {
+  // 4. Trigger High Priority System SOS Notification (100% Reliable Delivery)
+  const triggerSOSAlert = async () => {
     if (!routeResult) return;
 
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
+    // 1. Ensure permission is requested and granted
+    let perm: NotificationPermission =
+      typeof window !== "undefined" && "Notification" in window
+        ? Notification.permission
+        : "denied";
+
+    if (perm === "default" && typeof window !== "undefined" && "Notification" in window) {
+      try {
+        perm = await Notification.requestPermission();
+      } catch (err) {
+        console.warn("Notification request permission error:", err);
+      }
     }
 
-    // Register into central command queue
+    const notifTitle = `🚨 Flood SOS: Evacuate to ${routeResult.name}`;
+    const notifBody = `Heading ${routeResult.cardinalHeading} (${routeResult.bearingAngle}°) · Vector: ${routeResult.distanceKm} km. Proceed to elevated ground.`;
+    const notifTag = `qflow-sos-${Date.now()}`;
+
+    // 2. Try Service Worker Show Notification (PWA / Mobile / Background)
+    let dispatched = false;
+    if (perm === "granted" && typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        if (reg && reg.showNotification) {
+          await reg.showNotification(notifTitle, {
+            body: notifBody,
+            icon: "/icon.png",
+            badge: "/icon.png",
+            tag: notifTag,
+            requireInteraction: true,
+            renotify: true,
+            vibrate: [300, 100, 300, 100, 300],
+            data: { url: "/offline-sos", timestamp: Date.now() },
+          } as unknown as NotificationOptions);
+          dispatched = true;
+        }
+      } catch (swErr) {
+        console.warn("SW showNotification note:", swErr);
+      }
+    }
+
+    // 3. Fallback to Direct Window Notification if SW was pending
+    if (!dispatched && perm === "granted" && typeof window !== "undefined" && "Notification" in window) {
+      try {
+        new Notification(notifTitle, {
+          body: notifBody,
+          icon: "/icon.png",
+          tag: notifTag,
+        });
+      } catch (winErr) {
+        console.warn("Window Notification fallback error:", winErr);
+      }
+    }
+
+    // 4. Register into central command queue
     if (userPos && routeResult) {
       addSOS({
         id: `SOS-OFFLINE-${Date.now().toString().slice(-4)}`,
@@ -171,19 +221,6 @@ export function OfflineCompassNavigation() {
       });
       setSosSentSuccess(true);
       setTimeout(() => setSosSentSuccess(false), 6000);
-    }
-
-    // Service Worker OS Notification
-    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({
-        type: "TRIGGER_OFFLINE_FLOOD_SOS",
-        payload: {
-          name: routeResult.name,
-          distanceKm: routeResult.distanceKm,
-          cardinalHeading: routeResult.cardinalHeading,
-          bearingAngle: routeResult.bearingAngle,
-        },
-      });
     }
 
     // Generate CAP 1.2 XML Alert

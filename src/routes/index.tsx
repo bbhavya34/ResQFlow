@@ -82,11 +82,11 @@ export default function Index() {
           <div className="text-right text-xs text-muted-foreground">
             <p>Operational status</p>
             <p
-              className={`text-sm font-semibold ${online ? "text-[oklch(0.42_0.11_155)]" : "text-[oklch(0.45_0.13_75)]"}`}
+              className={`text-sm font-semibold ${online ? "text-emerald-400" : "text-amber-400"}`}
             >
               {online
                 ? "ONLINE · all feeds nominal"
-                : "DEGRADED · cached plan active"}
+                : "OFFLINE · cached plan active"}
             </p>
             <p className="mt-1">Last sync {lastSync}</p>
           </div>
