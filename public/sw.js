@@ -6,8 +6,20 @@
  * ============================================================================
  */
 
-const STATIC_CACHE = "resqflow-static-v2";
-const RUNTIME_CACHE = "resqflow-runtime-v2";
+const STATIC_CACHE = "resqflow-static-v3";
+const RUNTIME_CACHE = "resqflow-runtime-v3";
+const MAP_TILES_CACHE = "resqflow-map-tiles-v1";
+const MAX_TILE_ENTRIES = 500;
+
+// Map tile hostnames to cache offline
+const MAP_TILE_HOSTS = [
+  "tile.openstreetmap.org",
+  "server.arcgisonline.com",
+  "a.basemaps.cartocdn.com",
+  "b.basemaps.cartocdn.com",
+  "c.basemaps.cartocdn.com",
+  "cartodb-basemaps-a.global.ssl.fastly.net",
+];
 
 const CORE_ASSETS = [
   "/",
@@ -47,7 +59,11 @@ self.addEventListener("activate", (event) => {
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((name) => {
-            if (name !== STATIC_CACHE && name !== RUNTIME_CACHE) {
+            if (
+              name !== STATIC_CACHE &&
+              name !== RUNTIME_CACHE &&
+              name !== MAP_TILES_CACHE
+            ) {
               return caches.delete(name);
             }
           }),
@@ -64,6 +80,40 @@ self.addEventListener("fetch", (event) => {
 
   // Skip non-GET requests and browser extensions
   if (request.method !== "GET" || !url.protocol.startsWith("http")) {
+    return;
+  }
+
+  // Skip /backend/* API routes — always go to network, never cache
+  if (url.pathname.startsWith("/backend/")) {
+    return;
+  }
+
+  // M. Map Tiles — Cache-First with 500-tile LRU-style limit
+  if (MAP_TILE_HOSTS.includes(url.hostname)) {
+    event.respondWith(
+      caches.match(request).then((cachedTile) => {
+        if (cachedTile) return cachedTile;
+
+        return fetch(request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              caches.open(MAP_TILES_CACHE).then(async (cache) => {
+                const keys = await cache.keys();
+                if (keys.length >= MAX_TILE_ENTRIES) {
+                  // Evict oldest tile to stay under limit
+                  await cache.delete(keys[0]);
+                }
+                cache.put(request, networkResponse.clone());
+              });
+            }
+            return networkResponse;
+          })
+          .catch(async () => {
+            // Offline: serve blank tile placeholder
+            return new Response("", { status: 204, statusText: "Tile Offline" });
+          });
+      }),
+    );
     return;
   }
 

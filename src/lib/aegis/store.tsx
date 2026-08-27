@@ -176,26 +176,37 @@ export function AegisProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Active network probe — navigator.onLine is unreliable (just checks
-  // if a network interface exists, not real internet). We ping the health
-  // endpoint every 10 s; if it fails we are truly offline.
+  // Active network probe — /backend/api/v1/health/ returns 503 from the
+  // Next.js proxy even when offline (the proxy itself answers). Instead:
+  // 1. Fast-fail: navigator.onLine = false  →  definitely offline
+  // 2. Real check: fetch a tiny external resource with no-cors (opaque
+  //    response, but if it throws the network is truly down)
   const probeConnectivity = useCallback(async () => {
+    // Fast-fail: OS reports no network interface at all
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setOnline(false);
+      setDataSource("demo");
+      return false;
+    }
+
+    // Real internet probe: opaque no-cors request to Cloudflare's CDN
+    // Will throw (TypeError: Failed to fetch) when truly offline
     try {
-      const res = await fetch("/backend/api/v1/health/", {
-        method: "HEAD",
+      await fetch("https://www.cloudflare.com/cdn-cgi/trace", {
+        method: "GET",
+        mode: "no-cors",
         cache: "no-store",
         signal: AbortSignal.timeout(4000),
       });
-      if (res.ok) {
-        setOnline(true);
-        return true;
-      }
+      // Opaque response (mode: no-cors) — if we get here, internet is reachable
+      setOnline(true);
+      return true;
     } catch {
-      // fetch threw (network unreachable, timeout, DNS failure, etc.)
+      // Network unreachable, DNS failure, or timeout
+      setOnline(false);
+      setDataSource("demo");
+      return false;
     }
-    setOnline(false);
-    setDataSource("demo");
-    return false;
   }, []);
 
   useEffect(() => {
