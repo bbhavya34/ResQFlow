@@ -238,6 +238,43 @@ its feedback.
 
 ResQFlow incorporates an autonomous, zero-network emergency evacuation and triage subsystem (`/offline-sos`) designed to function when all cellular data, Wi-Fi, and upstream cloud connectivity are completely offline:
 
+```mermaid
+flowchart TD
+  subgraph hardware["Hardware & OS"]
+    gps["GNSS (GPS)"]
+    net["Network Interface"]
+  end
+
+  subgraph browser["Browser (Offline-First Engine)"]
+    direction TB
+    subgraph intelligence["Intelligence"]
+      routing["Turf.js Routing<br/>(Vector/Bearing)"]
+      cap["CAP 1.2 Engine<br/>(XML Alerts)"]
+      probe["Connectivity Probe<br/>(Cloudflare Trace + navigator.onLine)"]
+    end
+
+    subgraph persistence["Persistence"]
+      idb[("IndexedDB<br/>(Safehouse/Camp Cache)")]
+      sw["Service Worker<br/>(PWA/Push/Notifications)"]
+    end
+  end
+
+  subgraph app["ResQFlow Application"]
+    ui["Offline SOS UI"]
+    store["Aegis Store (React Context)"]
+  end
+
+  gps --> routing
+  net --> probe
+  probe --> store
+  store --> idb
+  idb --> routing
+  routing --> ui
+  cap --> ui
+  sw --> ui
+  store --> sw
+```
+
 1. **Client-Side Spatial Math (`@turf/turf`)**:
    * Computes great-circle distance vectors and true compass azimuth bearing angles from hardware GNSS coordinates to all pre-cached relief safehouses.
    * Dynamically renders a rotating SVG compass instrument with 8-point cardinal resolution (`N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW`).
