@@ -41,8 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <p className="text-[11px] text-muted-foreground">Last sync</p>
               <p className="text-xs font-medium text-foreground">{lastSync}</p>
             </div>
-            <button
-              onClick={() => setOnline(!online)}
+            <div
               className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-semibold ${
                 online
                   ? "border-emerald-500/30 bg-emerald-950/40 text-emerald-400"
@@ -53,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className={`size-2 rounded-full ${online ? "bg-emerald-400" : "bg-red-400 animate-pulse"}`}
               />
               {online ? "ONLINE" : "OFFLINE MODE"}
-            </button>
+            </div>
           </div>
         </div>
         <nav className="mx-auto max-w-[1600px] overflow-x-auto px-2 pb-1">
