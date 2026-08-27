@@ -176,30 +176,55 @@ export function AegisProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  useEffect(() => {
-    void syncFromBackend();
-
-    if (typeof window === "undefined") {
-      return undefined;
+  // Active network probe — navigator.onLine is unreliable (just checks
+  // if a network interface exists, not real internet). We ping the health
+  // endpoint every 10 s; if it fails we are truly offline.
+  const probeConnectivity = useCallback(async () => {
+    try {
+      const res = await fetch("/backend/api/v1/health/", {
+        method: "HEAD",
+        cache: "no-store",
+        signal: AbortSignal.timeout(4000),
+      });
+      if (res.ok) {
+        setOnline(true);
+        return true;
+      }
+    } catch {
+      // fetch threw (network unreachable, timeout, DNS failure, etc.)
     }
+    setOnline(false);
+    setDataSource("demo");
+    return false;
+  }, []);
 
-    setOnline(navigator.onLine);
-    const handleOnline = () => {
-      setOnline(true);
-      void syncFromBackend();
-    };
-    const handleOffline = () => {
-      setOnline(false);
-      setDataSource("demo");
-    };
+  useEffect(() => {
+    // Initial check + sync
+    void probeConnectivity().then((isOnline) => {
+      if (isOnline) void syncFromBackend();
+    });
+
+    if (typeof window === "undefined") return undefined;
+
+    // Poll every 10 seconds for real connectivity
+    const interval = setInterval(() => {
+      void probeConnectivity().then((isOnline) => {
+        if (isOnline) void syncFromBackend();
+      });
+    }, 10_000);
+
+    // Supplement with native events for fast response on reconnect
+    const handleOnline = () => void probeConnectivity().then((ok) => { if (ok) void syncFromBackend(); });
+    const handleOffline = () => { setOnline(false); setDataSource("demo"); };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
     return () => {
+      clearInterval(interval);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [syncFromBackend]);
+  }, [probeConnectivity, syncFromBackend]);
 
   const recommendations = useMemo(
     () =>
