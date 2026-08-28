@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type BasemapId = "openfloodgauge" | "topo" | "terrain" | "osm" | "dark";
+export type BasemapId = "openfloodgauge" | "topo" | "terrain" | "osm";
 
 export type BasemapConfig = {
   id: BasemapId;
@@ -77,19 +77,6 @@ export const BASEMAP_CONFIGS: Record<BasemapId, BasemapConfig> = {
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
     previewColor: "#e2e8f0",
-  },
-  dark: {
-    id: "dark",
-    name: "CartoDB Dark Matter",
-    shortName: "Dark",
-    label: "Dark",
-    description: "High-contrast dark navy control-room theme",
-    tiles: "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-    thumbnail: "https://a.basemaps.cartocdn.com/dark_all/4/11/7.png",
-    maxzoom: 19,
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>',
-    previewColor: "#0f172a",
   },
 };
 

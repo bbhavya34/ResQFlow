@@ -53,7 +53,11 @@ const LAYERS: {
   { key: "route", label: "Safe route", icon: MapPin, color: "#059669" },
 ];
 
-export function FloodMapSidebar() {
+export function FloodMapSidebar({
+  showOperationalLayers = true,
+}: {
+  showOperationalLayers?: boolean;
+}) {
   const {
     activeBasemap,
     overlays,
@@ -73,7 +77,7 @@ export function FloodMapSidebar() {
     >
       <DrawerHeader className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 px-5 py-0 text-left">
         <DrawerTitle className="text-lg font-bold tracking-tight">
-          Map Filters
+          {showOperationalLayers ? "Map Filters" : "Basemaps"}
         </DrawerTitle>
         <DrawerClose asChild>
           <button
@@ -87,7 +91,8 @@ export function FloodMapSidebar() {
       </DrawerHeader>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <section className="border-b border-slate-200">
+        {showOperationalLayers && (
+          <section className="border-b border-slate-200">
           <button
             type="button"
             onClick={() => setFloodedFeaturesOpen((value) => !value)}
@@ -110,7 +115,8 @@ export function FloodMapSidebar() {
               <p className="text-slate-600">Flooded areas and critical infrastructure affected by the current flood event.</p>
             </div>
           )}
-        </section>
+          </section>
+        )}
 
         <section className="border-b border-slate-200">
           <button
@@ -158,7 +164,8 @@ export function FloodMapSidebar() {
           )}
         </section>
 
-        <section>
+        {showOperationalLayers && (
+          <section>
           <button
             type="button"
             onClick={() => setLayersOpen((value) => !value)}
@@ -227,7 +234,8 @@ export function FloodMapSidebar() {
               </button>
             </div>
           )}
-        </section>
+          </section>
+        )}
       </div>
 
       <DrawerFooter className="flex items-center gap-2 border-t border-slate-200 px-4 py-3 text-[11px] text-slate-500">

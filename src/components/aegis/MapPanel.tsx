@@ -57,6 +57,7 @@ export function MapPanel({
         zoom={zoom}
         showBasemapSwitcher={showBasemapSwitcher}
         showTopBar={false}
+        showOperationalLayers={false}
         className="absolute inset-0 rounded-none border-0"
       />
     </div>

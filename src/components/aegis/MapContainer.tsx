@@ -65,6 +65,7 @@ export interface MapContainerProps {
   layers?: Partial<OverlayLayers> | undefined;
   showTopBar?: boolean | undefined;
   showBasemapSwitcher?: boolean | undefined;
+  showOperationalLayers?: boolean | undefined;
   onMapLoaded?: ((map: L.Map) => void) | undefined;
 }
 
@@ -93,6 +94,7 @@ export function MapContainer({
   layers: layerProps,
   showTopBar = false,
   showBasemapSwitcher = true,
+  showOperationalLayers = true,
   onMapLoaded,
 }: MapContainerProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -608,7 +610,7 @@ export function MapContainer({
           onOpenChange={setSidebarOpen}
           shouldScaleBackground={false}
         >
-          <FloodMapSidebar />
+          <FloodMapSidebar showOperationalLayers={showOperationalLayers} />
         </Drawer>
 
         {/* Leaflet Canvas Container */}
