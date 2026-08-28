@@ -119,23 +119,25 @@ export function FloodMapSidebar({
         )}
 
         <section className="border-b border-slate-200">
-          <button
-            type="button"
-            onClick={() => setBasemapsOpen((value) => !value)}
-            className="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-bold hover:bg-slate-50"
-          >
-            <span className="flex items-center gap-2">
-              <Layers3 className="size-4 text-slate-500" />
-              Basemaps
-            </span>
-            {basemapsOpen ? (
-              <ChevronUp className="size-4" />
-            ) : (
-              <ChevronDown className="size-4" />
-            )}
-          </button>
-          {basemapsOpen && (
-            <div className="grid grid-cols-2 gap-2 px-4 pb-4">
+          {showOperationalLayers && (
+            <button
+              type="button"
+              onClick={() => setBasemapsOpen((value) => !value)}
+              className="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-bold hover:bg-slate-50"
+            >
+              <span className="flex items-center gap-2">
+                <Layers3 className="size-4 text-slate-500" />
+                Basemaps
+              </span>
+              {basemapsOpen ? (
+                <ChevronUp className="size-4" />
+              ) : (
+                <ChevronDown className="size-4" />
+              )}
+            </button>
+          )}
+          {(!showOperationalLayers || basemapsOpen) && (
+            <div className={`grid grid-cols-2 gap-2 px-4 ${showOperationalLayers ? "pb-4" : "py-4"}`}>
               {(
                 Object.keys(BASEMAP_CONFIGS) as (keyof typeof BASEMAP_CONFIGS)[]
               ).map((id) => {
