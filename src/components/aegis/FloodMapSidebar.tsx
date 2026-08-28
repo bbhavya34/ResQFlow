@@ -19,6 +19,13 @@ import {
   X,
 } from "lucide-react";
 import {
+  DrawerContent,
+  DrawerHeader,
+  DrawerFooter,
+  DrawerClose,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import {
   BASEMAP_CONFIGS,
   type OverlayLayers,
   useMapStore,
@@ -46,13 +53,7 @@ const LAYERS: {
   { key: "route", label: "Safe route", icon: MapPin, color: "#059669" },
 ];
 
-export function FloodMapSidebar({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
+export function FloodMapSidebar() {
   const {
     activeBasemap,
     overlays,
@@ -66,21 +67,24 @@ export function FloodMapSidebar({
   const activeCount = Object.values(overlays).filter(Boolean).length;
 
   return (
-    <aside
+    <DrawerContent
       aria-label="Map filters"
-      className={`${open ? "translate-x-0 lg:w-[292px]" : "-translate-x-full lg:w-0 lg:border-r-0"} absolute inset-y-0 left-0 z-[1100] flex w-[292px] flex-col border-r border-slate-300 bg-white text-slate-800 shadow-xl transition-[transform,width] duration-200 lg:relative lg:z-10 lg:shrink-0 lg:shadow-none`}
+      className="inset-y-0 right-0 left-auto h-full max-h-none w-full max-w-md gap-0 rounded-l-[10px] rounded-t-none border-slate-300 bg-white p-0 text-slate-800"
     >
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 px-5">
-        <h2 className="text-lg font-bold tracking-tight">Map Filters</h2>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded p-1 text-slate-500 hover:bg-slate-100 lg:hidden"
-          aria-label="Close map filters"
-        >
-          <X className="size-5" />
-        </button>
-      </div>
+      <DrawerHeader className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 px-5 py-0 text-left">
+        <DrawerTitle className="text-lg font-bold tracking-tight">
+          Map Filters
+        </DrawerTitle>
+        <DrawerClose asChild>
+          <button
+            type="button"
+            className="rounded p-1 text-slate-500 hover:bg-slate-100"
+            aria-label="Close map filters"
+          >
+            <X className="size-5" />
+          </button>
+        </DrawerClose>
+      </DrawerHeader>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         <section className="border-b border-slate-200">
@@ -226,10 +230,10 @@ export function FloodMapSidebar({
         </section>
       </div>
 
-      <div className="flex items-center gap-2 border-t border-slate-200 px-4 py-3 text-[11px] text-slate-500">
+      <DrawerFooter className="flex items-center gap-2 border-t border-slate-200 px-4 py-3 text-[11px] text-slate-500">
         <CircleDot className="size-4 text-blue-600" />
         Live operational data · India
-      </div>
-    </aside>
+      </DrawerFooter>
+    </DrawerContent>
   );
 }

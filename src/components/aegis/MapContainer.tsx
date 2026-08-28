@@ -33,11 +33,13 @@ import {
   Maximize2,
   RefreshCw,
   Menu,
+  Layers3,
   ChevronDown,
   AlertTriangle,
   X,
 } from "lucide-react";
 import { FloodMapSidebar } from "./FloodMapSidebar";
+import { Drawer } from "@/components/ui/drawer";
 
 // India default center [lat, lng]
 const INDIA_CENTER: [number, number] = [22.5, 79.0];
@@ -98,7 +100,7 @@ export function MapContainer({
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const overlaysLayerGroupRef = useRef<L.LayerGroup | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pointAlert, setPointAlert] = useState<PointAlert | null>(null);
 
   const {
@@ -600,20 +602,14 @@ export function MapContainer({
       )}
 
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
-        {showTopBar && (
-          <FloodMapSidebar
-            open={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-          />
-        )}
-        {showTopBar && sidebarOpen && (
-          <button
-            type="button"
-            aria-label="Close map filters"
-            onClick={() => setSidebarOpen(false)}
-            className="absolute inset-0 z-[1050] bg-slate-950/30 lg:hidden"
-          />
-        )}
+        <Drawer
+          direction="right"
+          open={sidebarOpen}
+          onOpenChange={setSidebarOpen}
+          shouldScaleBackground={false}
+        >
+          <FloodMapSidebar />
+        </Drawer>
 
         {/* Leaflet Canvas Container */}
         <div className="relative min-w-0 flex-1 overflow-hidden">
@@ -696,6 +692,17 @@ export function MapContainer({
               />
             </button>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open map layers"
+            title="Open map layers"
+            className="absolute left-12 top-3 z-[1000] flex h-8 items-center gap-1.5 rounded border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-800 shadow-md transition-colors hover:bg-slate-100"
+          >
+            <Layers3 className="size-3.5" />
+            Layers
+          </button>
 
           {/* Bottom-Left Visual Basemap Switcher (Avoids shape files option) */}
           {showBasemapSwitcher && <BasemapSwitcher />}
