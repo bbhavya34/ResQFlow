@@ -97,48 +97,48 @@ export default function Index() {
         <StatCard
           label="Active SOS"
           value={open.length}
-          sub="awaiting allocation"
+          sub="Awaiting Allocation"
           tone="critical"
         />
         <StatCard
           label="Critical"
           value={critical.length}
-          sub="priority ≥ 85"
+          sub="Priority ≥ 85"
           tone="critical"
         />
         <StatCard
           label="Flood-risk zones"
           value={FLOOD_ZONES.length}
-          sub="2 severe · 2 high"
+          sub="2 Severe · 2 High"
           tone="warn"
         />
         <StatCard
           label="Available resources"
           value={available.length}
-          sub="verified & ready"
+          sub="Verified & Ready"
           tone="good"
         />
         <StatCard
           label="Deployed"
           value={deployed.length}
-          sub="engaged in operations"
+          sub="Engaged In Operations"
         />
         <StatCard
           label="Awaiting rescue"
           value={awaiting}
-          sub="persons in open requests"
+          sub="Persons In Open Requests"
           tone="critical"
         />
         <StatCard
           label="Relief camps"
           value={camps.length}
-          sub={`${occupancy} persons sheltered`}
+          sub={`${occupancy} Persons Sheltered`}
           tone="good"
         />
         <StatCard
           label="Connectivity"
           value={online ? "ONLINE" : "DEGRADED"}
-          sub={online ? "Realtime sync active" : "Cached plan in use"}
+          sub={online ? "Realtime Sync Active" : "Cached Plan In Use"}
           tone={online ? "good" : "warn"}
         />
       </div>

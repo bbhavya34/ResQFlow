@@ -183,20 +183,20 @@ export function AegisProvider({ children }: { children: ReactNode }) {
   //    response, but if it throws the network is truly down)
   const probeConnectivity = useCallback(async () => {
     // Fast-fail: OS reports no network interface at all
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
       setOnline(false);
       setDataSource("demo");
       return false;
     }
 
-    // Real internet probe: opaque no-cors request to Cloudflare's CDN
+    // Real internet probe: opaque no-cors request with cache-busting query
     // Will throw (TypeError: Failed to fetch) when truly offline
     try {
-      await fetch("https://www.cloudflare.com/cdn-cgi/trace", {
+      await fetch(`https://www.cloudflare.com/cdn-cgi/trace?_probe=${Date.now()}`, {
         method: "GET",
         mode: "no-cors",
         cache: "no-store",
-        signal: AbortSignal.timeout(4000),
+        signal: AbortSignal.timeout(2500),
       });
       // Opaque response (mode: no-cors) — if we get here, internet is reachable
       setOnline(true);
@@ -217,16 +217,23 @@ export function AegisProvider({ children }: { children: ReactNode }) {
 
     if (typeof window === "undefined") return undefined;
 
-    // Poll every 10 seconds for real connectivity
+    // Poll every 4 seconds for rapid connectivity tracking
     const interval = setInterval(() => {
       void probeConnectivity().then((isOnline) => {
         if (isOnline) void syncFromBackend();
       });
-    }, 10_000);
+    }, 4_000);
 
-    // Supplement with native events for fast response on reconnect
-    const handleOnline = () => void probeConnectivity().then((ok) => { if (ok) void syncFromBackend(); });
-    const handleOffline = () => { setOnline(false); setDataSource("demo"); };
+    // Supplement with native events for instantaneous response
+    const handleOnline = () => {
+      void probeConnectivity().then((ok) => {
+        if (ok) void syncFromBackend();
+      });
+    };
+    const handleOffline = () => {
+      setOnline(false);
+      setDataSource("demo");
+    };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);

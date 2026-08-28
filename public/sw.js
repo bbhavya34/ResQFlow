@@ -187,7 +187,15 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // C. Other GET requests (API / dynamic): Network-first with runtime cache fallback
+  // Bypass external requests (except map tiles) and probe requests completely from SW interception
+  if (url.searchParams.has("_probe") || url.pathname.includes("cdn-cgi")) {
+    return;
+  }
+  if (url.origin !== self.location.origin && !MAP_TILE_HOSTS.includes(url.hostname)) {
+    return;
+  }
+
+  // C. Other GET requests: Network-first with runtime cache fallback
   event.respondWith(
     fetch(request)
       .then((networkResponse) => {
@@ -202,8 +210,9 @@ self.addEventListener("fetch", (event) => {
       .catch(async () => {
         const cached = await caches.match(request);
         if (cached) return cached;
-        return new Response(JSON.stringify({ offline: true, message: "Operating in offline degraded mode" }), {
-          status: 200,
+        return new Response(JSON.stringify({ error: "Offline: Network unreachable" }), {
+          status: 503,
+          statusText: "Service Unavailable (Offline)",
           headers: { "Content-Type": "application/json" },
         });
       }),

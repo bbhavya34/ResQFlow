@@ -11,6 +11,15 @@ import {
 } from "@/components/aegis/ui";
 import { priorityScore, type SOS } from "@/lib/aegis/data";
 import { useAegis } from "@/lib/aegis/store";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = definePage("/sos")({
   head: () => ({
@@ -40,6 +49,7 @@ export default function SosPage() {
   const [selectedId, setSelectedId] = useState(sosList[0]?.id ?? "");
   const [raw, setRaw] = useState("SOS 11.2588 75.7804 5");
   const [err, setErr] = useState("");
+  const [triagedSOS, setTriagedSOS] = useState<SOS | null>(null);
   const selected = sosList.find((s) => s.id === selectedId) ?? sosList[0];
 
   const parse = () => {
@@ -120,10 +130,34 @@ export default function SosPage() {
     };
     addSOS(s);
     setSelectedId(id);
+    setTriagedSOS(s);
   };
 
   return (
     <div className="space-y-6">
+      <AlertDialog
+        open={Boolean(triagedSOS)}
+        onOpenChange={(open) => {
+          if (!open) setTriagedSOS(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>SOS request queued</AlertDialogTitle>
+            <AlertDialogDescription>
+              SOS {triagedSOS?.id} has been added to the triage queue with a
+              priority score of{" "}
+              {triagedSOS ? priorityScore(triagedSOS.factors) : 0}/100.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setTriagedSOS(null)}>
+              Done
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
         <div className="panel p-4">
           <SectionTitle

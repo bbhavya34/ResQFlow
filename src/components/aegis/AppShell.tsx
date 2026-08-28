@@ -2,97 +2,159 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { useState, useEffect, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAegis } from "@/lib/aegis/store";
 
-const NAV = [
-  { to: "/", label: "Command Centre" },
-  { to: "/map", label: "Operations Map" },
-  { to: "/offline-sos", label: "🧭 Offline SOS" },
-  { to: "/sos", label: "SOS Requests" },
+const PRIMARY_NAV = [
+  { to: "/", label: "Command Center" },
   { to: "/resources", label: "Resources" },
   { to: "/allocation", label: "Allocation" },
   { to: "/camps", label: "Relief Camps" },
+] as const;
+
+const FIELD_NAV = [
   { to: "/field", label: "Field Feedback" },
   { to: "/analytics", label: "Analytics" },
-  { to: "/offline", label: "Connectivity" },
-  { to: "/demo", label: "Demo Run" },
+] as const;
+
+const SOS_NAV = [
+  { to: "/sos", label: "SOS Requests" },
+  { to: "/offline-sos", label: "Offline SOS" },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { online, lastSync } = useAegis();
+  const { online } = useAegis();
 
   // Prevent hydration mismatch: the online state is only known client-side
   // after the connectivity probe. Render a neutral badge on the server and
   // swap in the real status after mount.
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
       <div className="h-1 w-full brand-gradient" />
-      <header className="sticky top-0 z-[900] border-b border-border bg-card/90 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-3 px-4 py-3">
-          <Link href="/" className="leading-tight">
-            <span className="block text-[15px] font-semibold tracking-tight text-foreground">
-              ResQFlow
-            </span>
-            <span className="block text-[11px] text-muted-foreground">
-              National Disaster Response Intelligence Platform
-            </span>
-          </Link>
-          <div className="ml-auto flex items-center gap-3">
-            <div className="hidden text-right sm:block">
-              <p className="text-[11px] text-muted-foreground">Last sync</p>
-              <p className="text-xs font-medium text-foreground">{lastSync}</p>
-            </div>
-            <div
-              className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-semibold ${
-                !mounted
-                  ? "border-border bg-card text-muted-foreground"
-                  : online
-                  ? "border-emerald-500/30 bg-emerald-950/40 text-emerald-400"
-                  : "border-red-500/40 bg-red-950/50 text-red-400"
-              }`}
+      <header className="sticky top-0 z-[1000] border-b border-border bg-card/90 backdrop-blur-sm">
+        <nav aria-label="Primary navigation" className="relative z-[1010] mx-5 py-3">
+          <div className="flex w-full min-h-16 items-center rounded-full border border-border bg-card/90 px-5 py-3 text-sm text-foreground shadow-sm backdrop-blur-sm sm:px-9">
+            <Link
+              href="/"
+              aria-label="ResQFlow Command Center"
+              className="min-w-0 max-w-[calc(100%-3rem)] shrink leading-tight sm:max-w-none"
             >
-              <span
-                className={`size-2 rounded-full ${
-                  !mounted ? "bg-muted-foreground" : online ? "bg-emerald-400" : "bg-red-400 animate-pulse"
-                }`}
-              />
-              {!mounted ? "CHECKING..." : online ? "ONLINE" : "OFFLINE MODE"}
-            </div>
-          </div>
-        </div>
-        <nav className="mx-auto max-w-[1600px] overflow-x-auto px-2 pb-1">
-          <ul className="flex min-w-max items-center gap-1">
-            {NAV.map((n) => {
-              const active = pathname === n.to;
-              return (
-                <li key={n.to}>
+              <span className="block text-[15px] font-semibold tracking-tight text-foreground">
+                ResQFlow
+              </span>
+              <span className="block truncate text-[10px] text-muted-foreground sm:text-[11px]">
+                National Disaster Response Intelligence Platform
+              </span>
+            </Link>
+
+            <div className="ml-auto hidden items-center gap-6 xl:flex">
+              {PRIMARY_NAV.map((item) => {
+                const active = pathname === item.to;
+                return (
                   <Link
-                    href={n.to}
-                    className={`inline-block rounded-t-md border-b-2 px-3 py-2 text-[13px] font-medium transition-colors ${
+                    key={item.to}
+                    href={item.to}
+                    aria-current={active ? "page" : undefined}
+                    className={`group relative h-6 overflow-hidden text-[14px] font-medium transition-colors ${
                       active
-                        ? "border-primary text-primary"
-                        : "border-transparent text-muted-foreground hover:text-foreground"
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    {n.label}
+                    <span className="block transition-transform duration-300 group-hover:-translate-y-full">
+                      {item.label}
+                    </span>
+                    <span className="absolute left-0 top-full block transition-transform duration-300 group-hover:-translate-y-full">
+                      {item.label}
+                    </span>
                   </Link>
-                </li>
-              );
-            })}
-          </ul>
+                );
+              })}
+
+              <NavigationDropdown
+                label="Field & Analytics"
+                active={FIELD_NAV.some((item) => pathname === item.to)}
+                items={FIELD_NAV}
+              />
+              <NavigationDropdown
+                label="SOS Operations"
+                active={SOS_NAV.some((item) => pathname === item.to)}
+                items={SOS_NAV}
+              />
+            </div>
+
+            <div className="ml-3 flex items-center gap-2">
+              <span
+                title={!mounted ? "Checking connectivity" : online ? "Online" : "Offline"}
+                aria-label={!mounted ? "Checking connectivity" : online ? "Online" : "Offline"}
+                className={`size-2.5 shrink-0 rounded-full ring-4 ring-offset-2 ring-offset-card ${
+                  !mounted
+                    ? "bg-muted-foreground/60 ring-muted-foreground/10"
+                    : online
+                      ? "bg-emerald-400 ring-emerald-400/15"
+                      : "animate-pulse bg-red-400 ring-red-400/15"
+                }`}
+              />
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="xl:hidden"
+                aria-label={
+                  mobileMenuOpen
+                    ? "Close navigation menu"
+                    : "Open navigation menu"
+                }
+                aria-expanded={mobileMenuOpen}
+                onClick={() => setMobileMenuOpen((open) => !open)}
+              >
+                {mobileMenuOpen ? (
+                  <X aria-hidden="true" />
+                ) : (
+                  <Menu aria-hidden="true" />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {mobileMenuOpen && (
+            <div className="absolute left-0 right-0 top-full z-50 mt-2 rounded-2xl border border-border bg-card p-3 shadow-xl xl:hidden">
+              <MobileNavigationLinks
+                items={PRIMARY_NAV}
+                pathname={pathname}
+                onNavigate={() => setMobileMenuOpen(false)}
+              />
+              <MobileNavigationGroup
+                label="Field & Analytics"
+                items={FIELD_NAV}
+                pathname={pathname}
+                onNavigate={() => setMobileMenuOpen(false)}
+              />
+              <MobileNavigationGroup
+                label="SOS Operations"
+                items={SOS_NAV}
+                pathname={pathname}
+                onNavigate={() => setMobileMenuOpen(false)}
+              />
+            </div>
+          )}
         </nav>
       </header>
-
-      {mounted && !online && (
-        <div className="border-b border-red-500/30 bg-red-950/30 px-4 py-2 text-center text-xs font-medium text-red-400">
-          ⚠ OFFLINE MODE — Operating on cached emergency plan. All field operations continue offline.
-        </div>
-      )}
 
       <main className="mx-auto max-w-[1600px] px-4 py-6">{children}</main>
 
@@ -145,6 +207,115 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+type NavItem = {
+  to: string;
+  label: string;
+};
+
+function NavigationDropdown({
+  label,
+  active,
+  items,
+}: {
+  label: string;
+  active: boolean;
+  items: readonly NavItem[];
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={`group relative h-6 overflow-hidden text-[14px] font-medium transition-colors ${
+            active
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <span className="flex items-center gap-1 transition-transform duration-300 group-hover:-translate-y-full">
+            {label}
+            <ChevronDown className="size-3.5" aria-hidden="true" />
+          </span>
+          <span className="absolute left-0 top-full flex items-center gap-1 transition-transform duration-300 group-hover:-translate-y-full">
+            {label}
+            <ChevronDown className="size-3.5" aria-hidden="true" />
+          </span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        className="min-w-52 rounded-2xl border-border bg-card/95 p-2 shadow-xl backdrop-blur-sm"
+      >
+        {items.map((item) => (
+          <DropdownMenuItem
+            key={item.to}
+            asChild
+            className="rounded-xl px-3 py-2.5 text-sm font-medium"
+          >
+            <Link href={item.to} className="cursor-pointer">
+              {item.label}
+            </Link>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function MobileNavigationLinks({
+  items,
+  pathname,
+  onNavigate,
+}: {
+  items: readonly NavItem[];
+  pathname: string;
+  onNavigate: () => void;
+}) {
+  return (
+    <div className="grid gap-1">
+      {items.map((item) => (
+        <Link
+          key={item.to}
+          href={item.to}
+          onClick={onNavigate}
+          aria-current={pathname === item.to ? "page" : undefined}
+          className={`rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+            pathname === item.to
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+          }`}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function MobileNavigationGroup({
+  label,
+  items,
+  pathname,
+  onNavigate,
+}: {
+  label: string;
+  items: readonly NavItem[];
+  pathname: string;
+  onNavigate: () => void;
+}) {
+  return (
+    <div className="mt-3 border-t border-border pt-3">
+      <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      <MobileNavigationLinks
+        items={items}
+        pathname={pathname}
+        onNavigate={onNavigate}
+      />
     </div>
   );
 }

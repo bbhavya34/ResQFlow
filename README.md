@@ -52,7 +52,7 @@ flowchart LR
 Every browser request goes to the same-origin `/backend/api/v1/*` path. The
 route handler at `app/backend/[...path]/route.ts` validates the path, forwards
 the method, body, and content type to `DJANGO_API_URL` (default
-`http://127.0.0.1:8001` in local development), and returns `503` if Django is
+`http://127.0.0.1:8004` in local development), and returns `503` if Django is
 unreachable. On load, the client fetches `/bootstrap` for a full snapshot and
 records its data source as `loading`, then `postgres` on success or `demo` on
 failure.
@@ -318,8 +318,8 @@ docker compose up --build
 ```
 
 - Frontend: `http://localhost:3000`
-- Django API: `http://localhost:8001/api/v1/`
-- Health check: `http://localhost:8001/api/v1/health/`
+- Django API: `http://localhost:8004/api/v1/`
+- Health check: `http://localhost:8004/api/v1/health/`
 
 ### Frontend development
 
@@ -329,7 +329,7 @@ npm install
 npm run dev
 ```
 
-The frontend uses `http://127.0.0.1:8001` by default for the API proxy.
+The frontend uses `http://127.0.0.1:8004` by default for the API proxy.
 
 
 ## Verify

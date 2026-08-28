@@ -10,7 +10,7 @@ async function proxy(
   }
 
   const backendOrigin = (
-    process.env["DJANGO_API_URL"] ?? "http://127.0.0.1:8001"
+    process.env["DJANGO_API_URL"] ?? "http://127.0.0.1:8004"
   ).replace(/\/$/, "");
   const incomingUrl = new URL(request.url);
   const target = `${backendOrigin}/${path.map(encodeURIComponent).join("/")}/${incomingUrl.search}`;
