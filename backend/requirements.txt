@@ -3,13 +3,4 @@ djangorestframework>=3.16,<4
 django-cors-headers>=4.7,<5
 psycopg[binary]>=3.2,<4
 gunicorn>=23,<24
-rasterio>=1.2
-rioxarray>=0.7
-geopandas>=0.12
-earthaccess>=0.4
-asf-search>=0.7
-richdem>=0.5
-torch>=1.9
-folium>=0.13
-streamlit>=1.0
 

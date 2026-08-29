@@ -1,0 +1,13 @@
+# Optional hydrology pipeline dependencies.
+# Keep the Django app deployable on Render without requiring the entire scientific stack.
+# Install these only in environments that explicitly run the hydrology pipeline.
+
+rasterio>=1.2
+rioxarray>=0.7
+geopandas>=0.12
+earthaccess>=0.4
+asf-search>=0.7
+richdem==0.3.4
+torch>=1.9
+folium>=0.13
+streamlit>=1.0
