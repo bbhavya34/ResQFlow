@@ -1,15 +1,17 @@
 FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    INSTALL_HYDROLOGY=0
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends binutils gdal-bin libgdal-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt requirements-hydrology.txt ./
+RUN pip install --no-cache-dir -r requirements.txt \
+    && if [ "$INSTALL_HYDROLOGY" = "1" ]; then pip install --no-cache-dir -r requirements-hydrology.txt; fi
 
 COPY . .
 
