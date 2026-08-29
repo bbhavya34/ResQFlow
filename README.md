@@ -200,19 +200,21 @@ resource is removed (`on_delete=SET_NULL`); deleting an SOS request cascades to
 its feedback.
 
 ## Stack
-
-| Layer               | Technology                                                             |
-| ------------------- | ---------------------------------------------------------------------- |
-| Frontend            | Next.js 16 App Router, React 19, TypeScript, Tailwind CSS v4           |
-| UI components       | Radix UI primitives with shadcn/ui, lucide-react icons                 |
-| Client state        | React Context (domain data) + Zustand (map UI state)                   |
-| Forms & validation  | react-hook-form with Zod                                               |
-| Charts              | Recharts (analytics)                                                   |
-| Maps                | Leaflet with five basemaps (OpenFloodGauge, Esri Topo, Esri Terrain, OSM, CARTO Dark) |
-| API                 | Django 5.2, Django REST Framework, GeoDjango, Gunicorn                 |
-| Database            | PostgreSQL 17 with PostGIS 3.5                                          |
-| Local orchestration | Docker Compose                                                         |
-| Production          | Vercel frontend, Render Django API and PostgreSQL                      |
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js 16 App Router, React 19, TypeScript, Tailwind CSS v4 |
+| UI components | Radix UI primitives with shadcn/ui, lucide-react icons |
+| Client state | React Context (domain data) + Zustand (map UI state) |
+| Forms & validation | react-hook-form with Zod |
+| Charts | Recharts (analytics) |
+| Maps | Leaflet with five basemaps (OpenFloodGauge, Esri Topo, Esri Terrain, OSM, CARTO Dark) |
+| API | Django 5.2, Django REST Framework, GeoDjango, Gunicorn |
+| Database | PostgreSQL 17 with PostGIS 3.5 |
+| Hydrology & inundation layer | Python package under `backend/hydrology_engine/` for DEM conditioning, SCS-CN runoff, D8 flow routing, TWI, 2D inundation modelling, and flood alert generation |
+| ML / forecasting | PyTorch `RunoffLSTM`, precipitation/soil-moisture feature engineering, and synthetic fallback inference paths |
+| Geospatial tooling | Rasterio, rioxarray, geopandas, shapely, folium, streamlit |
+| Local orchestration | Docker Compose |
+| Production | Vercel frontend, Render Django API and PostgreSQL |
 
 ## Main screens
 
@@ -289,6 +291,44 @@ flowchart TD
 
 4. **PWA Service Worker (`public/sw.js`)**:
    * Registers persistent, high-priority OS notifications with custom vibration patterns (`requireInteraction: true`) to deliver route instructions even when the browser is backgrounded.
+  
+
+## ML-Driven Flood Forecasting & Hydrology Layer
+
+Beyond the zero-network SOS stack, ResQFlow now includes a hydrology intelligence layer that turns rainfall, soil wetness, and terrain data into flood-depth estimates and operational hazard overlays. This layer complements the request-and-allocation workflow by adding a predictive, geospatial early-warning capability for flood-prone districts and river corridors:
+
+```mermaid
+flowchart TD
+  rain["Rainfall forcing<br/>GPM / Open-Meteo / synthetic fallback"] --> ingest["Data ingestion<br/>NASA POWER + precipitation grids"]
+  soil["Soil wetness<br/>GWETROOT / GWETTOP"] --> ingest
+  dem["Digital Elevation Model<br/>DEM conditioning + pit filling"] --> terrain["Terrain metrics<br/>slope, D8 flow, accumulation, TWI"]
+  ingest --> runoff["SCS-CN runoff engine<br/>P_n = ((P - I_a)^2)/(P - I_a + S)"]
+  terrain --> runoff
+  runoff --> model["RunoffLSTM<br/>Precipitation + soil + slope -> Q (m^3/s)"]
+  model --> inundation["2D diffusion-wave inundation solver<br/>water depth h(x,y,t)"]
+  inundation --> mask["Flood mask + risk levels<br/>0-3 severity classes"]
+  mask --> ops["GeoJSON / GeoTIFF / dashboard alerts"]
+  ops --> ui["Operator view + GIS overlays"]
+```
+
+1. **Multi-source hydrological ingestion**:
+   * Pulls daily soil moisture fields from NASA POWER (`GWETROOT`, `GWETTOP`) and rainfall grids from GPM/IMERG or Open-Meteo when Earthdata credentials are unavailable.
+   * Keeps the pipeline resilient by falling back to synthetic data rather than failing outright, protecting the command centre from downtime during degraded data conditions.
+
+2. **Terrain conditioning and watershed structure**:
+   * Uses DEM-based processing to fill sinks, compute slope, route flow with a D8 algorithm, estimate flow accumulation, and calculate Topographic Wetness Index (TWI).
+   * These terrain metrics directly affect where water concentrates, drains, and remains ponded during heavy rainfall.
+
+3. **Runoff and discharge modelling**:
+   * Combines dynamic soil wetness with SCS-CN runoff theory to compute direct runoff depth over time.
+   * Uses a PyTorch `RunoffLSTM` module to estimate basin outlet discharge from precipitation, soil moisture, and terrain slope features, with a synthetic fallback path so the system remains runnable when model weights are not yet trained.
+
+4. **Flood extent and operator actioning**:
+   * Solves a simplified 2D shallow-water depth field over the DEM grid to estimate water depth and flood-mask extents.
+   * Produces risk levels from 0 to 3, GeoJSON polygons, GeoTIFF raster exports, and map-ready outputs for operator dashboards and GIS ingestion.
+
+This intelligence layer does not replace the field triage workflow; instead, it gives ResQFlow a predictive flood lens and a geospatial decision layer that helps operators anticipate inundation, prioritise vulnerable zones, and coordinate relief before floodwater spreads.
+
 
 ## API
 
@@ -371,3 +411,4 @@ backend/Dockerfile              Django Docker image
 - Map UI state (basemap, overlays) is client-only and is not persisted.
 - No authentication, role management, real-time messaging, background workers,
   external alert ingestion, or trained ML models are included.
+- The new hydrology engine is a production-ready modular pipeline for research and operational prototyping, but domain-specific calibration, sensor ingestion, and production deployment tuning should still be added for real-world flood forecasting.
