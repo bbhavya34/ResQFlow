@@ -16,6 +16,7 @@ import {
   YAxis,
 } from "recharts";
 import { SectionTitle, StatCard } from "@/components/aegis/ui";
+import HydrologyPredictor from "@/components/HydrologyPredictor";
 import { ANALYTICS } from "@/lib/aegis/data";
 
 export const Route = definePage("/analytics")({
@@ -92,6 +93,8 @@ export default function AnalyticsPage() {
           sub="demo gauge-alert comparison"
         />
       </div>
+
+      <HydrologyPredictor />
 
       <div className="grid gap-4 xl:grid-cols-2">
         <Panel
