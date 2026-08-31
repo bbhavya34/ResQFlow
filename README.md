@@ -1,367 +1,662 @@
-# ResQFlow
+<div align="center">
 
-ResQFlow is a prototype command centre for coordinating flood-response work:
-triaging SOS requests, ranking available rescue resources, tracking relief
-camps, forecasting camp demand, recording field feedback, and visualising
-flood-risk areas on a live map.
+<img src="https://img.shields.io/badge/RESQFLOW-0F172A?style=for-the-badge&labelColor=0F172A&color=00D9A5" height="48" alt="ResQFlow"/>
 
-It is a decision-support prototype. Allocation scores and camp forecasts use
-deterministic, explainable rules and demo data; they are not trained predictions
-or a substitute for operational authorisation.
+<h1>ResQFlow</h1>
+<h3>Floods Demand Faster. Smarter. Decision.</h3>
 
-## System architecture
+<p>A geospatial disaster-response command centre that moves emergency teams from fragmented flood information to prioritised, explainable, operational decisions.</p>
 
-The runtime has three tiers: a Next.js frontend on Vercel, a Django REST API on
-Render, and a PostgreSQL + PostGIS database. The browser only ever talks to its
-own origin — a Next.js catch-all route proxies `/backend/*` to Django using the
-server-only `DJANGO_API_URL`, so API and database credentials never reach the
-client. If the API cannot be reached, the frontend degrades to typed in-memory
-demo fixtures and keeps working.
+<p>
+  <img src="https://img.shields.io/badge/status-decision--support%20prototype-2EA44F?style=for-the-badge&labelColor=0F172A"/>
+  <img src="https://img.shields.io/badge/architecture-geospatial%20command%20centre-8B5CF6?style=for-the-badge&labelColor=0F172A"/>
+  <img src="https://img.shields.io/badge/decisions-explainable%20heuristics-00D9A5?style=for-the-badge&labelColor=0F172A"/>
+  <img src="https://img.shields.io/badge/network-degraded%20mode%20ready-EF4444?style=for-the-badge&labelColor=0F172A"/>
+</p>
+
+<p>
+  <img src="https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=next.js&logoColor=white"/>
+  <img src="https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react&logoColor=white"/>
+  <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Django-5.2-092E20?style=flat-square&logo=django&logoColor=white"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-17-4169E1?style=flat-square&logo=postgresql&logoColor=white"/>
+  <img src="https://img.shields.io/badge/PostGIS-3.5-4169E1?style=flat-square"/>
+</p>
+
+<sub><b>Overview</b> &nbsp;·&nbsp; <b>Architecture</b> &nbsp;·&nbsp; <b>Explainability</b> &nbsp;·&nbsp; <b>API</b> &nbsp;·&nbsp; <b>Getting Started</b> &nbsp;·&nbsp; <b>Roadmap</b></sub>
+
+</div>
+
+<br/>
+
+<table align="center">
+<tr>
+<td align="center" width="20%"><b>6</b><br/><sub>Intelligence Layers</sub></td>
+<td align="center" width="20%"><b>100%</b><br/><sub>Explainable Decisions</sub></td>
+<td align="center" width="20%"><b>0</b><br/><sub>Black-Box Allocation</sub></td>
+<td align="center" width="20%"><b>24h</b><br/><sub>Camp Forecast Horizon</sub></td>
+<td align="center" width="20%"><b>5</b><br/><sub>Delivery Phases</sub></td>
+</tr>
+</table>
+
+<br/>
+
+> **ResQFlow is currently a decision-support prototype.** Resource allocation and camp forecasting use deterministic, explainable heuristics and demo data. They are not trained predictions and should not be treated as a substitute for operational authorisation.
+
+---
+
+## Table of Contents
+
+| | | |
+|---|---|---|
+| [01 · About](#about) | [08 · Explainability Engine](#explainability-engine) | [15 · Frontend Experience](#frontend-experience) |
+| [02 · The Problem](#the-problem) | [09 · Tech Stack](#tech-stack) | [16 · Portfolio, Watchlist & Alerts](#portfolio-watchlist--alerts) |
+| [03 · Product Philosophy](#product-philosophy) | [10 · Data Provider Architecture](#data-provider-architecture) | [17 · Project Structure](#project-structure) |
+| [04 · Core Differentiator](#core-differentiator) | [11 · Database Schema](#database-schema) | [18 · Getting Started](#getting-started) |
+| [05 · System Workflow](#system-workflow) | [12 · API Reference](#api-reference) | [19 · Roadmap](#roadmap) |
+| [06 · Multi-Agent Research Pipeline](#multi-agent-research-pipeline) | [13 · Authentication & Authorization](#authentication--authorization) | [20 · Engineering Principles](#engineering-principles) |
+| [07 · Evidence Layer & Validation](#evidence-layer--validation) | [14 · Safe Failure Architecture](#safe-failure-architecture) | |
+
+---
+
+## About
+
+ResQFlow is built around one simple idea:
+
+> **During a flood, knowing what is happening is not enough. The system must help determine what needs attention first and where limited resources should go.**
+
+The platform acts as an operational decision layer between incoming disaster information and response teams, combining a modern command-centre frontend, geospatial intelligence, deterministic decision engines, offline emergency capabilities, hydrological modelling, and a resilient backend architecture.
+
+**Core capabilities**
+
+| Category | Capabilities |
+|---|---|
+| **Triage & Allocation** | SOS request triage, explainable rescue-resource allocation, resource capability & availability tracking |
+| **Relief Operations** | Relief-camp capacity monitoring, camp demand forecasting, food/water stock monitoring, medical-load assessment |
+| **Flood Intelligence** | Flood-risk and inundation visualization, hydrological modelling, flood-depth estimation, GeoJSON/GeoTIFF outputs |
+| **Field & Resilience** | Field-feedback capture, offline emergency navigation, offline safehouse lookup, CAP 1.2 alert generation, degraded-network operation |
+
+The main command centre brings these capabilities together into a unified operational view.
+
+---
+
+## The Problem
+
+Flood response is fundamentally a **time + information + resource allocation problem**. Emergency teams face many SOS requests arriving simultaneously, limited rescue vehicles and boats, incomplete information about available resources, changing flood conditions, constrained relief-camp capacity, limited food and water, medical-resource bottlenecks, unreliable connectivity, and geographically distributed response teams.
+
+The challenge is therefore not simply *"Will this area flood?"* — it is:
+
+> **"Who needs help first, what resources are available, where should they go, and which relief locations are likely to become overloaded?"**
+
+### The Response Gap vs. ResQFlow's Approach
 
 ```mermaid
 flowchart LR
-  operator["Operator browser"]
+    subgraph GAP["The Response Gap"]
+        direction LR
+        A1["Scattered Information"] --> A2["Manual Interpretation"] --> A3["Delayed Prioritisation"] --> A4["Resource Mismatch"] --> A5["Slower Response"] --> A6["Higher Operational Risk"]
+    end
 
-  subgraph vercel["Vercel — Next.js frontend"]
-    ui["App Router pages + screen components"]
-    stores["Client state<br/>React Context (domain) + Zustand (map UI)"]
-    logic["Client decision logic<br/>allocation ranking + camp demand forecast"]
-    proxy["/backend/* proxy route<br/>(server-only)"]
-    demo["Typed in-memory demo fixtures"]
-  end
+    subgraph FLOW["ResQFlow's Approach"]
+        direction LR
+        B1["Incoming Data"] --> B2["Unified Command Centre"] --> B3["Flood + SOS Intelligence"] --> B4["Explainable Prioritisation"] --> B5["Resource Matching"] --> B6["Camp Readiness"] --> B7["Field Feedback"] --> B8["Continuous Operational Update"]
+    end
 
-  subgraph render["Render"]
-    django["Django REST API<br/>DRF + GeoDjango, Gunicorn"]
-    postgis[("PostgreSQL 17 + PostGIS 3.5")]
-    seed["Migrations + demo-data seed"]
-  end
+    classDef bad fill:#EF4444,stroke:#B91C1C,color:#fff,stroke-width:2px
+    classDef good fill:#00D9A5,stroke:#047857,color:#0F172A,stroke-width:2px
 
-  tiles["Map tiles<br/>OpenFloodGauge · Esri · OSM · CARTO"]
-
-  operator --> ui
-  ui --> stores
-  ui --> logic
-  ui -->|"/backend/api/v1/*"| proxy
-  proxy -->|"DJANGO_API_URL"| django
-  proxy -. "API unreachable" .-> demo
-  django --> postgis
-  seed --> postgis
-  ui --> tiles
+    class A1,A2,A3,A4,A5,A6 bad
+    class B1,B2,B3,B4,B5,B6,B7,B8 good
 ```
 
-Every browser request goes to the same-origin `/backend/api/v1/*` path. The
-route handler at `app/backend/[...path]/route.ts` validates the path, forwards
-the method, body, and content type to `DJANGO_API_URL` (default
-`http://127.0.0.1:8004` in local development), and returns `503` if Django is
-unreachable. On load, the client fetches `/bootstrap` for a full snapshot and
-records its data source as `loading`, then `postgres` on success or `demo` on
-failure.
+---
 
-## Frontend composition and data flow
+## Product Philosophy
 
-App Router entry points under `app/` are thin wrappers that render screen
-components from `src/routes/`. Shared UI and map components live in
-`src/components/`, and all client data, state, and decision logic live in
-`src/lib/aegis/`.
+ResQFlow follows five product principles.
 
 ```mermaid
 flowchart TD
-  subgraph pages["app/ — App Router routes"]
-    routes["/ · /map · /sos · /resources · /allocation<br/>/camps · /field · /analytics · /offline · /demo"]
-  end
+    A["Decision Support over Black-Box Automation"] --> F["Operator Retains Control"]
+    B["Explainability by Default"] --> F
+    C["Geography as a First-Class Data Type"] --> F
+    D["Graceful Degradation"] --> F
+    E["Operational Clarity over Feature Overload"] --> F
 
-  subgraph screens["src/routes + src/components/aegis"]
-    screen["Screen components"]
-    maps["Leaflet map + basemap switcher"]
-  end
+    classDef principle fill:#8B5CF6,stroke:#5B21B6,color:#fff,stroke-width:2px
+    classDef outcome fill:#00D9A5,stroke:#047857,color:#0F172A,stroke-width:2px
 
-  subgraph state["src/lib/aegis — state & logic"]
-    ctx["store.tsx — AegisProvider (React Context)<br/>SOS, resources, camps, feedback, recommendations, sync"]
-    mapstore["mapStore.ts — Zustand<br/>active basemap, overlays, cursor"]
-    forecast["campForecast.ts — camp demand forecast"]
-    apimod["api.ts — typed fetch client"]
-    seedData["data.ts — types + demo fixtures"]
-  end
-
-  routes --> screen
-  screen --> maps
-  screen --> ctx
-  screen --> forecast
-  maps --> mapstore
-  ctx --> apimod
-  ctx -. "fallback" .-> seedData
-  forecast --> seedData
-  apimod -->|"/backend/api/v1/*"| proxy["Next.js proxy route"]
-  proxy --> django["Django REST API"]
+    class A,B,C,D,E principle
+    class F outcome
 ```
 
-Domain data — SOS requests, resources, camps, feedback, and the derived resource
-recommendations — is held in a React Context provider, `AegisProvider`.
-Transient map UI (the active basemap, overlay toggles, and cursor coordinates)
-is held in a separate Zustand store, `useMapStore`. The typed fetch client in
-`api.ts` talks only to the same-origin proxy; the API exposes `camelCase` fields
-and represents every PostGIS point as a `lat`/`lng` pair, and the client types
-in `data.ts` mirror that shape exactly.
+**1. Decision support over black-box automation.** The system recommends actions, but the controller remains in control. Every allocation recommendation exposes human-readable reasons so an operator can validate, override, or reject it.
 
-## Decision logic
+**2. Explainability by default.** A recommendation without context is difficult to trust during an emergency. ResQFlow exposes the factors behind resource-ranking and camp-risk decisions.
 
-Both planning aids are deterministic, explainable heuristics that run entirely
-in the browser; the backend handles persistence and transactional state changes,
-not scoring.
+**3. Geography is a first-class data type.** Flood response is inherently spatial. SOS requests, rescue resources, camps and flood zones are represented geographically and processed using PostGIS and geospatial tooling.
 
-Resource allocation (`recommendFor` in `store.tsx`) ranks available resources
-for each open SOS request using a Haversine distance penalty, capability
-matching (livestock, medical), capacity versus party size, verification status,
-official-versus-civilian category, and an ETA estimate derived from resource
-type. Each recommendation carries the human-readable reasons behind its score so
-a controller can confirm or override it.
+**4. Failure should degrade gracefully.** Emergency software cannot assume perfect connectivity. When the backend is unavailable, the frontend continues using typed demo fixtures, and the dedicated offline SOS subsystem can operate without network connectivity.
 
-Camp demand forecasting (`buildCampForecasts` in `campForecast.ts`) projects
-arrivals over a 6-, 12-, or 24-hour horizon from active SOS demand in the same
-district or state, burns down food and water stock against projected occupancy,
-checks people-per-medic load, and assigns each camp a
-`CRITICAL`/`HIGH`/`WATCH`/`STABLE` risk with the reasons and recommended actions.
+**5. Operational clarity over feature overload.** The interface is designed around the responder's questions — what is happening, who needs help, what is closest, what resource should be assigned, which camp is under pressure, where is flooding likely to spread, what should happen next.
 
-## Operational workflow
+---
+
+## Core Differentiator
+
+Most disaster platforms tend to focus on one layer — prediction, mapping, incident management, or resource tracking. ResQFlow connects these layers into one operational loop.
+
+### The ResQFlow Decision Stack
 
 ```mermaid
 flowchart TD
-  report["SOS received (APP / SMS / IVR)"] --> triage["Triage and calculate priority"]
-  triage --> match["Rank available resources"]
-  match --> decision["Controller confirms or overrides assignment"]
-  decision --> dispatch["Set request to assigned or dispatched"]
-  dispatch --> field["Field team submits feedback"]
-  field --> resolved["Mark rescued, or return request to triage"]
-  resolved --> closed["Close request"]
-  camps["Camp capacity, supplies, demand forecast"] --> decision
-  flood["Flood zones and map layers"] --> triage
+    A["Flood Intelligence<br/>Rainfall · Soil · Terrain · Inundation"] --> B["Incident Intelligence<br/>SOS · Severity · Location · Status"]
+    B --> C["Resource Intelligence<br/>Distance · Capability · Capacity · ETA"]
+    C --> D["Relief Intelligence<br/>Capacity · Food · Water · Medical Load"]
+    D --> E["Field Intelligence<br/>Feedback · Status · Operational Updates"]
+
+    classDef layer fill:#0EA5E9,stroke:#0369A1,color:#fff,stroke-width:2px
+    class A,B,C,D,E layer
 ```
 
-## Data model
+The differentiator is not a single model. It is the **integration of geospatial intelligence, explainable decision logic, emergency workflows and resilient operation into one response system**.
+
+---
+
+## System Workflow
+
+### End-to-End Operational Flow
+
+```mermaid
+flowchart LR
+    A["External / Field<br/>Data Sources"] --> B["Data Ingestion Layer<br/>Rain · Soil · DEM · SOS"]
+    B --> C["Geospatial Intelligence<br/>Terrain + Hydrology"]
+    C --> D["Flood Intelligence<br/>Runoff + Inundation"]
+    D --> E["SOS Requests"]
+    D --> F["Relief Camps"]
+    E --> G["SOS Triage"]
+    F --> H["Camp Forecasting"]
+    G --> I["Resource Recommendation"]
+    H --> J["Camp Risk Assessment"]
+    I --> K["Command Centre<br/>Operator Decision"]
+    J --> K
+    K --> L["Dispatch / Action"]
+    L --> M["Field Feedback"]
+    M --> N["Updated State"]
+
+    classDef ingest fill:#8B5CF6,stroke:#5B21B6,color:#fff,stroke-width:2px
+    classDef intel fill:#0EA5E9,stroke:#0369A1,color:#fff,stroke-width:2px
+    classDef branch fill:#F59E0B,stroke:#B45309,color:#fff,stroke-width:2px
+    classDef decide fill:#00D9A5,stroke:#047857,color:#0F172A,stroke-width:2px
+    classDef action fill:#22C55E,stroke:#15803D,color:#fff,stroke-width:2px
+
+    class A,B ingest
+    class C,D intel
+    class E,F,G,H,I,J branch
+    class K decide
+    class L,M,N action
+```
+
+### Runtime Architecture
+
+ResQFlow uses a three-tier architecture. The browser never receives the Django/database credentials — the Next.js catch-all route forwards requests to Django through the server-only `DJANGO_API_URL`.
+
+```mermaid
+flowchart LR
+    A["Browser"] -- "same-origin /backend/*" --> B["Next.js Frontend"]
+    B -- "server-side proxy" --> C["Django REST API"]
+    C --> D["PostgreSQL + PostGIS"]
+
+    classDef client fill:#8B5CF6,stroke:#5B21B6,color:#fff,stroke-width:2px
+    classDef server fill:#0EA5E9,stroke:#0369A1,color:#fff,stroke-width:2px
+    classDef db fill:#22C55E,stroke:#15803D,color:#fff,stroke-width:2px
+
+    class A client
+    class B,C server
+    class D db
+```
+
+---
+
+## Multi-Agent Research Pipeline
+
+> **Current status: Architecture direction / not implemented in the supplied prototype.**
+
+A future ResQFlow intelligence layer can evolve the deterministic decision engines into specialised, cooperating agents — remaining **human-supervised**, especially for high-impact emergency decisions.
+
+### Proposed Agent Architecture
+
+```mermaid
+flowchart TD
+    A["Incident Agent"] --> D["Decision Agent"]
+    B["Flood Agent"] --> D
+    C["Resource Agent"] --> D
+    D --> E["Relief Agent"]
+    E --> F["Human Controller"]
+
+    classDef agent fill:#8B5CF6,stroke:#5B21B6,color:#fff,stroke-width:2px
+    classDef decide fill:#F59E0B,stroke:#B45309,color:#fff,stroke-width:2px
+    classDef human fill:#22C55E,stroke:#15803D,color:#fff,stroke-width:2px
+
+    class A,B,C,E agent
+    class D decide
+    class F human
+```
+
+| Agent | Proposed Responsibility |
+|---|---|
+| **Flood Intelligence Agent** | Interpret rainfall, terrain and inundation outputs |
+| **Incident Agent** | Prioritise incoming SOS requests |
+| **Resource Agent** | Identify available response resources |
+| **Relief Agent** | Assess camp readiness and projected demand |
+| **Decision Agent** | Synthesise evidence into an operational recommendation |
+
+---
+
+## Evidence Layer & Validation
+
+ResQFlow's current decision layer is intentionally deterministic. Rather than returning an opaque score, the system exposes the full reasoning chain behind every recommendation.
+
+```mermaid
+flowchart LR
+    A["Recommended Resource"] --> B["Distance Factor"]
+    A --> C["Capability Match"]
+    A --> D["Capacity Match"]
+    A --> E["Verification Status"]
+    A --> F["Resource Category"]
+    A --> G["Estimated ETA"]
+    B --> H["Human-Readable Rationale"]
+    C --> H
+    D --> H
+    E --> H
+    F --> H
+    G --> H
+
+    classDef factor fill:#0EA5E9,stroke:#0369A1,color:#fff,stroke-width:2px
+    classDef rationale fill:#00D9A5,stroke:#047857,color:#0F172A,stroke-width:2px
+
+    class A,B,C,D,E,F,G factor
+    class H rationale
+```
+
+For resource allocation, the recommendation engine considers Haversine distance, livestock capability, medical capability, resource capacity versus party size, verification status, official versus civilian category, and estimated ETA based on resource type. Each recommendation contains the reasons behind its score so a controller can confirm or override it.
+
+Camp forecasts similarly expose projected arrivals, food consumption, water consumption, projected occupancy, people-per-medic load, resulting risk level, and recommended actions.
+
+---
+
+## Explainability Engine
+
+The explainability layer is one of the central design principles of ResQFlow.
+
+### Resource Recommendation
+
+```mermaid
+flowchart TD
+    A["Resource Candidate"] --> B["Distance"]
+    A --> C["Capability"]
+    A --> D["Capacity"]
+    A --> E["Verification"]
+    A --> F["Resource Category"]
+    A --> G["ETA"]
+    B --> H["Deterministic Score"]
+    C --> H
+    D --> H
+    E --> H
+    F --> H
+    G --> H
+    H --> I["Human-Readable Reasons"]
+    I --> J["Controller Confirmation"]
+    J -- Assign --> K["Dispatched"]
+    J -- Override --> L["Manual Reassignment"]
+
+    classDef factor fill:#0EA5E9,stroke:#0369A1,color:#fff,stroke-width:2px
+    classDef score fill:#F59E0B,stroke:#B45309,color:#fff,stroke-width:2px
+    classDef human fill:#8B5CF6,stroke:#5B21B6,color:#fff,stroke-width:2px
+    classDef outcome fill:#22C55E,stroke:#15803D,color:#fff,stroke-width:2px
+
+    class A,B,C,D,E,F,G factor
+    class H score
+    class I,J human
+    class K,L outcome
+```
+
+### Camp Risk
+
+Camp demand is projected across **6, 12, and 24 hours**. The system evaluates projected occupancy, food/water stock and medical load and assigns a severity level with reasons and recommended actions.
+
+```mermaid
+flowchart LR
+    A["Projected Occupancy"] --> E["Risk Classification"]
+    B["Food / Water Stock"] --> E
+    C["Medical Load"] --> E
+    E --> F["CRITICAL"]
+    E --> G["HIGH"]
+    E --> H["WATCH"]
+    E --> I["STABLE"]
+
+    classDef input fill:#0EA5E9,stroke:#0369A1,color:#fff,stroke-width:2px
+    classDef critical fill:#EF4444,stroke:#B91C1C,color:#fff,stroke-width:2px
+    classDef high fill:#F59E0B,stroke:#B45309,color:#fff,stroke-width:2px
+    classDef watch fill:#F59E0B,stroke:#B45309,color:#fff,stroke-width:2px
+    classDef stable fill:#22C55E,stroke:#15803D,color:#fff,stroke-width:2px
+
+    class A,B,C input
+    class F critical
+    class G high
+    class H watch
+    class I stable
+```
+
+---
+
+## Tech Stack
+
+<table>
+<tr>
+<td valign="top" width="25%">
+
+**Frontend**
+
+<img src="https://img.shields.io/badge/Next.js%2016-000000?style=for-the-badge&logo=next.js&logoColor=white"/><br/>
+<img src="https://img.shields.io/badge/React%2019-149ECA?style=for-the-badge&logo=react&logoColor=white"/><br/>
+<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"/><br/>
+<img src="https://img.shields.io/badge/Tailwind%20CSS%20v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white"/><br/>
+<img src="https://img.shields.io/badge/Radix%20UI%20%2B%20shadcn%2Fui-000000?style=for-the-badge"/><br/>
+<img src="https://img.shields.io/badge/Leaflet-199900?style=for-the-badge&logo=leaflet&logoColor=white"/><br/>
+<img src="https://img.shields.io/badge/Recharts-8884D8?style=for-the-badge"/>
+
+</td>
+<td valign="top" width="25%">
+
+**State & Forms**
+
+<img src="https://img.shields.io/badge/React%20Context-149ECA?style=for-the-badge"/><br/>
+<img src="https://img.shields.io/badge/Zustand-433E38?style=for-the-badge"/><br/>
+<img src="https://img.shields.io/badge/react--hook--form-EC5990?style=for-the-badge"/><br/>
+<img src="https://img.shields.io/badge/Zod-3E67B1?style=for-the-badge"/>
+
+</td>
+<td valign="top" width="25%">
+
+**Backend & Data**
+
+<img src="https://img.shields.io/badge/Django%205.2-092E20?style=for-the-badge&logo=django&logoColor=white"/><br/>
+<img src="https://img.shields.io/badge/Django%20REST%20Framework-A30000?style=for-the-badge"/><br/>
+<img src="https://img.shields.io/badge/GeoDjango-092E20?style=for-the-badge"/><br/>
+<img src="https://img.shields.io/badge/Gunicorn-499848?style=for-the-badge"/><br/>
+<img src="https://img.shields.io/badge/PostgreSQL%2017-4169E1?style=for-the-badge&logo=postgresql&logoColor=white"/><br/>
+<img src="https://img.shields.io/badge/PostGIS%203.5-4169E1?style=for-the-badge"/>
+
+</td>
+<td valign="top" width="25%">
+
+**Hydrology & Deployment**
+
+<img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white"/><br/>
+<img src="https://img.shields.io/badge/PyTorch%20%2F%20RunoffLSTM-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white"/><br/>
+<img src="https://img.shields.io/badge/Rasterio%20%2F%20rioxarray-F59E0B?style=for-the-badge"/><br/>
+<img src="https://img.shields.io/badge/GeoPandas%20%2F%20Shapely-F59E0B?style=for-the-badge"/><br/>
+<img src="https://img.shields.io/badge/Docker%20Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white"/><br/>
+<img src="https://img.shields.io/badge/Vercel%20%2B%20Render-000000?style=for-the-badge&logo=vercel&logoColor=white"/>
+
+</td>
+</tr>
+</table>
+
+The hydrology engine includes DEM conditioning, SCS-CN runoff, D8 flow routing, TWI, 2D inundation modelling and flood-alert generation.
+
+---
+
+## Data Provider Architecture
+
+ResQFlow uses a resilient multi-source hydrological ingestion strategy.
+
+| Data Domain | Sources |
+|---|---|
+| **Rainfall** | GPM / IMERG, Open-Meteo fallback |
+| **Soil Moisture** | NASA POWER — `GWETROOT`, `GWETTOP` |
+| **Terrain** | DEM — sink filling, slope calculation, D8 flow routing, flow accumulation, Topographic Wetness Index |
+
+### Provider Fallback Chain
+
+```mermaid
+flowchart LR
+    A["Primary Data Provider"] -- Available --> B["Process"]
+    A -- Unavailable --> C["Alternate Provider"]
+    C -- Available --> B
+    C -- Unavailable --> D["Synthetic Fallback"]
+    D --> B
+
+    classDef primary fill:#0EA5E9,stroke:#0369A1,color:#fff,stroke-width:2px
+    classDef fallback fill:#F59E0B,stroke:#B45309,color:#fff,stroke-width:2px
+    classDef synth fill:#94A3B8,stroke:#475569,color:#0F172A,stroke-width:2px
+    classDef process fill:#22C55E,stroke:#15803D,color:#fff,stroke-width:2px
+
+    class A primary
+    class C fallback
+    class D synth
+    class B process
+```
+
+The purpose is resilience: degraded upstream data should not automatically bring down the command centre.
+
+---
+
+## Database Schema
+
+PostgreSQL + PostGIS provides the persistence and spatial layer.
 
 ```mermaid
 erDiagram
-  RESCUE_RESOURCE o|--o{ SOS_REQUEST : "assigned to"
-  SOS_REQUEST ||--o{ FEEDBACK_ENTRY : "has"
-  SOS_REQUEST {
-    string id PK
-    string channel
-    point location "SRID 4326"
-    string status
-    int people
-    int children
-    int elderly
-    int disabled
-    int livestock
-    boolean medical
-    float flood_depth_m
-    json factors
-  }
-  RESCUE_RESOURCE {
-    string id PK
-    string type
-    string category
-    point location "SRID 4326"
-    string availability
-    int capacity
-    json capabilities
-    boolean verified
-  }
-  RELIEF_CAMP {
-    string id PK
-    point location "SRID 4326"
-    int capacity
-    int occupancy
-    float food_days
-    float water_days
-    int medical_staff
-    string status
-  }
-  FLOOD_ZONE {
-    string id PK
-    point center "SRID 4326"
-    string risk
-    float probability
-    float radius_km
-  }
-  FEEDBACK_ENTRY {
-    string id PK
-    string sos_id FK
-    string type
-    string by
-    string note
-  }
+    SOS_REQUEST }o--|| RESOURCE : assigned_resource
+    SOS_REQUEST ||--o{ FIELD_FEEDBACK : has
+    RELIEF_CAMP ||--o{ SOS_REQUEST : services
+    FLOOD_ZONE ||--o{ SOS_REQUEST : overlaps
 ```
 
-All geographic fields are PostGIS geography points in WGS 84 (`SRID 4326`) with
-spatial indexes, serialised to and from `lat`/`lng` pairs by the API.
-`SOSRequest.assigned_resource` is optional and becomes `NULL` if the linked
-resource is removed (`on_delete=SET_NULL`); deleting an SOS request cascades to
-its feedback.
+**Spatial model.** Geographic fields use PostGIS Geography with WGS 84 (SRID 4326). The API serialises spatial points as:
 
-## Stack
-| Layer | Technology |
-| --- | --- |
-| Frontend | Next.js 16 App Router, React 19, TypeScript, Tailwind CSS v4 |
-| UI components | Radix UI primitives with shadcn/ui, lucide-react icons |
-| Client state | React Context (domain data) + Zustand (map UI state) |
-| Forms & validation | react-hook-form with Zod |
-| Charts | Recharts (analytics) |
-| Maps | Leaflet with five basemaps (OpenFloodGauge, Esri Topo, Esri Terrain, OSM, CARTO Dark) |
-| API | Django 5.2, Django REST Framework, GeoDjango, Gunicorn |
-| Database | PostgreSQL 17 with PostGIS 3.5 |
-| Hydrology & inundation layer | Python package under `backend/hydrology_engine/` for DEM conditioning, SCS-CN runoff, D8 flow routing, TWI, 2D inundation modelling, and flood alert generation |
-| ML / forecasting | PyTorch `RunoffLSTM`, precipitation/soil-moisture feature engineering, and synthetic fallback inference paths |
-| Geospatial tooling | Rasterio, rioxarray, geopandas, shapely, folium, streamlit |
-| Local orchestration | Docker Compose |
-| Production | Vercel frontend, Render Django API and PostgreSQL |
+```json
+{
+  "lat": 28.6139,
+  "lng": 77.2090
+}
+```
 
-## Main screens
+Spatial indexes are used for geographic fields.
 
-- **Command Centre** (`/`) — snapshot of requests, resources, recommendations,
-  and system status.
-- **Operations Map** (`/map`) — SOS, resource, camp, and flood-zone layers with
-  a basemap switcher.
-- **Offline SOS Navigation** (`/offline-sos`) — zero-network GNSS compass, local Turf.js spatial routing, IndexedDB safehouse cache, and OASIS CAP 1.2 XML generation.
-- **SOS Requests** (`/sos`) — review, triage, assign, dispatch, and update
-  requests.
-- **Resources** (`/resources`) — rescue-resource availability and capability
-  tracking.
-- **Allocation** (`/allocation`) — explainable resource ranking with controller
-  override.
-- **Relief Camps** (`/camps`) — capacity, supplies, medical load, and demand
-  forecasts.
-- **Field Feedback** (`/field`) — record field updates and change request status.
-- **Analytics** (`/analytics`) — prototype response metrics.
-- **Connectivity** (`/offline`) — offline and degraded-network experience.
-- **Demo Run** (`/demo`) — guided walkthrough of the prototype.
+**Relationship behaviour.** `SOSRequest.assigned_resource` is optional — if its linked resource is removed, `assigned_resource` is set to `NULL`. Deleting an SOS request cascades to its feedback records.
 
-## Offline Flood SOS & Spatial Navigation Engine
+---
 
-ResQFlow incorporates an autonomous, zero-network emergency evacuation and triage subsystem (`/offline-sos`) designed to function when all cellular data, Wi-Fi, and upstream cloud connectivity are completely offline:
+## API Reference
+
+The Django REST API is rooted at `/api/v1/`. The frontend accesses the same API through `/backend/api/v1/*`.
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/v1/health/` | Checks PostgreSQL/PostGIS connectivity |
+| `GET /api/v1/bootstrap/` | Returns the full dashboard snapshot in a single request |
+| `/api/v1/sos/` | CRUD operations for SOS requests |
+| `POST /api/v1/sos/{id}/assign/` | Transactionally assigns a rescue resource — returns `409` if unavailable |
+| `/api/v1/resources/` | CRUD for rescue resources |
+| `/api/v1/camps/` | CRUD for relief camps |
+| `/api/v1/flood-zones/` | CRUD for flood zones |
+| `/api/v1/feedback/` | CRUD for field feedback — a "Rescued" entry releases the assigned resource |
+
+---
+
+## Authentication & Authorization
+
+> **Current status: Not implemented in the supplied prototype.**
+
+The current prototype does not include authentication or role management. For production, the recommended authorization model separates operational responsibilities:
 
 ```mermaid
 flowchart TD
-  subgraph hardware["Hardware & OS"]
-    gps["GNSS (GPS)"]
-    net["Network Interface"]
-  end
+    A["System Administrator"] --> B["Incident Controller"]
+    B --> C["Field Responder"]
+    C --> D["Read-Only Observer"]
 
-  subgraph browser["Browser (Offline-First Engine)"]
-    direction TB
-    subgraph intelligence["Intelligence"]
-      routing["Turf.js Routing<br/>(Vector/Bearing)"]
-      cap["CAP 1.2 Engine<br/>(XML Alerts)"]
-      probe["Connectivity Probe<br/>(Cloudflare Trace + navigator.onLine)"]
-    end
-
-    subgraph persistence["Persistence"]
-      idb[("IndexedDB<br/>(Safehouse/Camp Cache)")]
-      sw["Service Worker<br/>(PWA/Push/Notifications)"]
-    end
-  end
-
-  subgraph app["ResQFlow Application"]
-    ui["Offline SOS UI"]
-    store["Aegis Store (React Context)"]
-  end
-
-  gps --> routing
-  net --> probe
-  probe --> store
-  store --> idb
-  idb --> routing
-  routing --> ui
-  cap --> ui
-  sw --> ui
-  store --> sw
+    classDef role fill:#8B5CF6,stroke:#5B21B6,color:#fff,stroke-width:2px
+    class A,B,C,D role
 ```
 
-1. **Client-Side Spatial Math (`@turf/turf`)**:
-   * Computes great-circle distance vectors and true compass azimuth bearing angles from hardware GNSS coordinates to all pre-cached relief safehouses.
-   * Dynamically renders a rotating SVG compass instrument with 8-point cardinal resolution (`N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW`).
+Future production requirements should include authenticated sessions, role-based access control, audit logs, privileged action confirmation, secure API credentials, and emergency override policies.
 
-2. **Local Storage Cache (`idb` / IndexedDB)**:
-   * Replicates central relief camp records (`CAMPS`) into `qflow_emergency_db` on launch.
-   * Allows field responders and citizens to query safehouse capacity, occupancy, district, and coordinates completely offline.
+---
 
-3. **OASIS Common Alerting Protocol (CAP v1.2) XML Engine**:
-   * Generates standards-compliant OASIS CAP 1.2 XML distress alerts (`src/lib/capGenerator.ts`).
-   * Provides direct polygon-delimited geospatial payloads suitable for ingestion by government Cell Broadcast Systems (CBS), NDMA CAP-India (Sachet), and multi-agency emergency relays.
+## Safe Failure Architecture
 
-4. **PWA Service Worker (`public/sw.js`)**:
-   * Registers persistent, high-priority OS notifications with custom vibration patterns (`requireInteraction: true`) to deliver route instructions even when the browser is backgrounded.
-  
+> **When dependencies fail, degrade capability instead of collapsing the entire application.**
 
-## ML-Driven Flood Forecasting & Hydrology Layer
-
-Beyond the zero-network SOS stack, ResQFlow now includes a hydrology intelligence layer that turns rainfall, soil wetness, and terrain data into flood-depth estimates and operational hazard overlays. This layer complements the request-and-allocation workflow by adding a predictive, geospatial early-warning capability for flood-prone districts and river corridors:
+### API Failure
 
 ```mermaid
 flowchart TD
-  rain["Rainfall forcing<br/>GPM / Open-Meteo / synthetic fallback"] --> ingest["Data ingestion<br/>NASA POWER + precipitation grids"]
-  soil["Soil wetness<br/>GWETROOT / GWETTOP"] --> ingest
-  dem["Digital Elevation Model<br/>DEM conditioning + pit filling"] --> terrain["Terrain metrics<br/>slope, D8 flow, accumulation, TWI"]
-  ingest --> runoff["SCS-CN runoff engine<br/>P_n = ((P - I_a)^2)/(P - I_a + S)"]
-  terrain --> runoff
-  runoff --> model["RunoffLSTM<br/>Precipitation + soil + slope -> Q (m^3/s)"]
-  model --> inundation["2D diffusion-wave inundation solver<br/>water depth h(x,y,t)"]
-  inundation --> mask["Flood mask + risk levels<br/>0-3 severity classes"]
-  mask --> ops["GeoJSON / GeoTIFF / dashboard alerts"]
-  ops --> ui["Operator view + GIS overlays"]
+    A["Frontend"] --> B{"Django Available?"}
+    B -- Yes --> C["PostgreSQL"]
+    B -- No --> D["Typed Demo Fixtures"]
+    C --> E["source: postgres"]
+    D --> F["source: demo"]
+
+    classDef check fill:#F59E0B,stroke:#B45309,color:#fff,stroke-width:2px
+    classDef good fill:#22C55E,stroke:#15803D,color:#fff,stroke-width:2px
+    classDef fallback fill:#94A3B8,stroke:#475569,color:#0F172A,stroke-width:2px
+
+    class B check
+    class C,E good
+    class D,F fallback
 ```
 
-1. **Multi-source hydrological ingestion**:
-   * Pulls daily soil moisture fields from NASA POWER (`GWETROOT`, `GWETTOP`) and rainfall grids from GPM/IMERG or Open-Meteo when Earthdata credentials are unavailable.
-   * Keeps the pipeline resilient by falling back to synthetic data rather than failing outright, protecting the command centre from downtime during degraded data conditions.
+### Offline Emergency Operation
 
-2. **Terrain conditioning and watershed structure**:
-   * Uses DEM-based processing to fill sinks, compute slope, route flow with a D8 algorithm, estimate flow accumulation, and calculate Topographic Wetness Index (TWI).
-   * These terrain metrics directly affect where water concentrates, drains, and remains ponded during heavy rainfall.
+The `/offline-sos` subsystem is designed to continue operating without cellular data, Wi-Fi or upstream cloud connectivity. It uses hardware GNSS, Turf.js spatial calculations, IndexedDB, PWA service workers, cached relief-camp data, and CAP 1.2 XML generation.
 
-3. **Runoff and discharge modelling**:
-   * Combines dynamic soil wetness with SCS-CN runoff theory to compute direct runoff depth over time.
-   * Uses a PyTorch `RunoffLSTM` module to estimate basin outlet discharge from precipitation, soil moisture, and terrain slope features, with a synthetic fallback path so the system remains runnable when model weights are not yet trained.
+---
 
-4. **Flood extent and operator actioning**:
-   * Solves a simplified 2D shallow-water depth field over the DEM grid to estimate water depth and flood-mask extents.
-   * Produces risk levels from 0 to 3, GeoJSON polygons, GeoTIFF raster exports, and map-ready outputs for operator dashboards and GIS ingestion.
+## Frontend Experience
 
-This intelligence layer does not replace the field triage workflow; instead, it gives ResQFlow a predictive flood lens and a geospatial decision layer that helps operators anticipate inundation, prioritise vulnerable zones, and coordinate relief before floodwater spreads.
+ResQFlow is organised as an operational command centre rather than a collection of disconnected dashboards.
 
+| Route | Purpose |
+|---|---|
+| **`/`** — Command Centre | High-level snapshot of SOS requests, available resources, recommendations, system status |
+| **`/map`** — Operations Map | Visualises SOS requests, resources, relief camps, flood zones, multiple basemaps |
+| **`/sos`** — SOS Operations | Review → Triage → Assign → Dispatch → Update |
+| **`/resources`** — Resource Management | Tracks availability, capabilities, resource categories, operational state |
+| **`/allocation`** — Allocation | Explainable resource rankings with controller override |
+| **`/camps`** — Relief Camps | Tracks capacity, occupancy, supplies, medical load, projected demand |
+| **`/field`** — Field Feedback | Records field updates and changes request status |
+| **`/analytics`** — Analytics | Prototype response metrics |
+| **`/offline`** — Offline | Degraded-network experience |
+| **`/demo`** — Demo | Guided prototype walkthrough |
 
-## API
+---
 
-The Django API is rooted at `/api/v1/`. Payloads use `camelCase` fields and
-represent locations as `lat`/`lng` pairs.
+## Portfolio, Watchlist & Alerts
 
-| Endpoint                        | Purpose                                                                   |
-| ------------------------------- | ------------------------------------------------------------------------- |
-| `GET /api/v1/health/`           | Confirms PostgreSQL/PostGIS connectivity. Use this for uptime monitoring. |
-| `GET /api/v1/bootstrap/`        | Returns the full dashboard snapshot in one call.                          |
-| `/api/v1/sos/`                  | CRUD for SOS requests.                                                     |
-| `POST /api/v1/sos/{id}/assign/` | Transactionally assigns a rescue resource (`409` if unavailable).         |
-| `/api/v1/resources/`            | CRUD for rescue resources.                                                |
-| `/api/v1/camps/`                | CRUD for relief camps.                                                     |
-| `/api/v1/flood-zones/`          | CRUD for flood zones.                                                      |
-| `/api/v1/feedback/`             | CRUD for field feedback; a "Rescued" entry frees the assigned resource.   |
+> **Current status: Not implemented as a portfolio/watchlist product feature.**
 
-The Next.js client accesses the same endpoints through `/backend/api/v1/*`; do
-not expose Django database credentials to the browser.
+For a future operational intelligence layer, ResQFlow could introduce configurable monitoring views.
 
-## Run locally
+| Watchlist | Signal |
+|---|---|
+| **Incident Watchlist** | High-priority SOS, critical camps, rapidly increasing demand, flooding hotspots, resource shortages |
+| **Operational Alerts** | New critical SOS, resource becomes unavailable, camp crosses capacity threshold, food/water stock critical, flood-risk level increases, connectivity degradation |
 
-### Full stack with Docker
+### Proposed Alert Architecture
+
+```mermaid
+flowchart LR
+    A["Signal"] --> B["Rule / Intelligence Engine"] --> C["Severity Classification"] --> D["Alert Deduplication"] --> E["Operator Notification"] --> F["Acknowledgement"] --> G["Audit Trail"]
+
+    classDef step fill:#8B5CF6,stroke:#5B21B6,color:#fff,stroke-width:2px
+    class A,B,C,D,E,F,G step
+```
+
+These capabilities are roadmap items rather than current implemented functionality.
+
+---
+
+## Project Structure
+
+```text
+ResQFlow/
+├── app/
+│   ├── backend/
+│   │   └── [...path]/
+│   │       └── route.ts
+│   └── ...
+│
+├── src/
+│   ├── routes/
+│   ├── components/
+│   │   ├── aegis/
+│   │   └── ui/
+│   ├── hooks/
+│   └── lib/
+│       └── aegis/
+│           ├── api.ts
+│           ├── data.ts
+│           ├── store.tsx
+│           ├── mapStore.ts
+│           └── campForecast.ts
+│
+├── backend/
+│   ├── aegis_backend/
+│   ├── response/
+│   │   └── models/
+│   └── hydrology_engine/
+│
+├── public/
+│   └── sw.js
+│
+├── compose.yaml
+├── Dockerfile
+└── backend/
+    └── Dockerfile
+```
+
+| Directory | Responsibility |
+|---|---|
+| `app/` | Next.js App Router entry points |
+| `app/backend/` | Same-origin API proxy |
+| `src/routes/` | Screen-level UI |
+| `src/components/` | Shared UI and map components |
+| `src/lib/aegis/` | Domain state and decision logic |
+| `backend/response/` | Django models, serializers and views |
+| `backend/hydrology_engine/` | Hydrological intelligence |
+| `public/sw.js` | PWA service worker |
+
+---
+
+## Getting Started
+
+**Prerequisites**
+
+```text
+Node.js
+npm
+Docker
+Docker Compose
+Python environment for backend development
+```
+
+**Full Stack**
 
 ```bash
 docker compose up --build
 ```
 
-- Frontend: `http://localhost:3000`
-- Django API: `http://localhost:8004/api/v1/`
-- Health check: `http://localhost:8004/api/v1/health/`
+```text
+Frontend           http://localhost:3000
+Django API         http://localhost:8004/api/v1/
+Health Check       http://localhost:8004/api/v1/health/
+```
 
-### Frontend development
+**Frontend Development**
 
 ```bash
 docker compose up --build -d db backend
@@ -369,10 +664,9 @@ npm install
 npm run dev
 ```
 
-The frontend uses `http://127.0.0.1:8004` by default for the API proxy.
+The local API proxy defaults to `http://127.0.0.1:8004`.
 
-
-## Verify
+**Verification**
 
 ```bash
 npm run typecheck
@@ -381,34 +675,120 @@ npm run build
 docker compose run --rm backend python manage.py test
 ```
 
-## Repository layout
+---
 
-```text
-app/                            Next.js App Router routes (thin wrappers)
-app/backend/[...path]/route.ts  Same-origin proxy to the Django API
-src/routes/                     Screen-level client components
-src/components/aegis/           App shell, map, and basemap components
-src/components/ui/              shadcn/ui component library
-src/hooks/                      Shared React hooks
-src/lib/aegis/api.ts            Typed fetch client for the proxy
-src/lib/aegis/data.ts           Domain types and demo fixtures
-src/lib/aegis/store.tsx         Domain context + resource-recommendation engine
-src/lib/aegis/mapStore.ts       Zustand store for map UI state
-src/lib/aegis/campForecast.ts   Camp demand-forecast logic
-backend/aegis_backend/          Django project settings and URLs
-backend/response/               REST API models, serializers, views, and seed command
-compose.yaml                    Local frontend, backend, and PostGIS services
-Dockerfile                      Frontend Docker image
-backend/Dockerfile              Django Docker image
+## Roadmap
+
+| Phase | Scope |
+|---|---|
+| **P1 — Prototype Foundation** | Command centre, SOS management, resource tracking, explainable allocation, relief-camp monitoring, camp demand heuristics, flood-risk map, field feedback, offline SOS subsystem, hydrology engine |
+| **P2 — Operational Intelligence** | Real-time event ingestion, live sensor integration, production-calibrated forecasting, advanced flood forecasting, automated alerting, real-time communication layer, background processing workers |
+| **P3 — Secure Multi-Agency Platform** | Authentication, role-based authorization, audit trails, multi-agency tenancy, secure emergency workflows, permission-aware data sharing |
+| **P4 — Advanced Decision Intelligence** | Multi-agent orchestration, evidence aggregation, confidence-aware recommendations, scenario simulation, what-if resource planning, automated incident summarisation |
+| **P5 — National-Scale Deployment** | Large-scale geospatial processing, distributed event architecture, production ML model serving, government alert interoperability, regional command-centre federation, disaster-response analytics at scale |
+
+```mermaid
+flowchart LR
+    A["P1<br/>Prototype Foundation"] --> B["P2<br/>Operational Intelligence"] --> C["P3<br/>Secure Multi-Agency"] --> D["P4<br/>Advanced Decision Intelligence"] --> E["P5<br/>National-Scale Deployment"]
+
+    classDef done fill:#22C55E,stroke:#15803D,color:#fff,stroke-width:2px
+    classDef next fill:#F59E0B,stroke:#B45309,color:#fff,stroke-width:2px
+    classDef future fill:#94A3B8,stroke:#475569,color:#0F172A,stroke-width:2px
+
+    class A done
+    class B next
+    class C,D,E future
 ```
 
-## Prototype limits
+---
 
-- Demo records are seeded automatically, and the frontend falls back to typed
-  in-memory fixtures when the API is unavailable.
-- Allocation, risk, and camp forecasts are deterministic heuristics that run
-  client-side, not trained models.
-- Map UI state (basemap, overlays) is client-only and is not persisted.
-- No authentication, role management, real-time messaging, background workers,
-  external alert ingestion, or trained ML models are included.
-- The new hydrology engine is a production-ready modular pipeline for research and operational prototyping, but domain-specific calibration, sensor ingestion, and production deployment tuning should still be added for real-world flood forecasting.
+## Engineering Principles
+
+| Principle | Over |
+|---|---|
+| Explainability | Opacity |
+| Human-in-the-Loop | Silent Automation |
+| Graceful Degradation | Total Collapse |
+| Spatial-First Architecture | Location as Metadata |
+| Strong Boundaries | Tangled Layers |
+| Deterministic Logic | Unnecessary Black Boxes |
+| Production-Minded Prototypes | Throwaway Code |
+| Fail Safely | Silent Incorrect Action |
+| Evidence Before Action | Unsupported Recommendation |
+| Built for the Field | Ideal-Condition Assumptions |
+
+**01 — Explainability over opacity.** Every high-impact recommendation should be understandable by the person responsible for acting on it.
+
+**02 — Human-in-the-loop.** Automation should accelerate decisions, not silently replace operational authority.
+
+**03 — Graceful degradation.** External services, databases and networks can fail. The application should degrade safely instead of becoming completely unusable.
+
+**04 — Spatial-first architecture.** Location is not metadata in disaster response — it is core operational state.
+
+**05 — Strong boundaries.** Frontend presentation, client state, API transport, persistence and hydrological processing remain separated.
+
+**06 — Deterministic where possible.** If a rule can be explicit, auditable and reproducible, it should not unnecessarily become a black-box model.
+
+**07 — Production-minded prototypes.** Even prototype components should establish clean interfaces so they can later be replaced with production-grade implementations.
+
+**08 — Fail safely.** Emergency systems should prefer degraded capability over silent incorrect action.
+
+**09 — Evidence before action.** Recommendations should be grounded in observable system state and expose the reasoning behind them.
+
+**10 — Build for the field.** A disaster-response platform must assume unreliable connectivity, incomplete data, rapidly changing conditions, limited resources, and high operational pressure.
+
+---
+
+## ResQFlow at a Glance
+
+```mermaid
+flowchart TD
+    A["Flood Intelligence<br/>Rainfall · Soil · Terrain · Runoff · Inundation"] --> B["Incident Intelligence<br/>SOS · Priority · Location · Status"]
+    B --> C["Resource Intelligence<br/>Distance · Capability · Capacity · ETA"]
+    C --> D["Relief Intelligence<br/>Capacity · Food · Water · Medical Load"]
+    D --> E["Command Centre<br/>Explain · Prioritise · Assign · Override"]
+    E --> F["Field Response<br/>Dispatch · Feedback · Status"]
+    F --> G["Resilient Operation<br/>Offline · Degraded Network · Fallback Data"]
+
+    classDef layer fill:#0EA5E9,stroke:#0369A1,color:#fff,stroke-width:2px
+    classDef command fill:#8B5CF6,stroke:#5B21B6,color:#fff,stroke-width:2px
+    classDef field fill:#00D9A5,stroke:#047857,color:#0F172A,stroke-width:2px
+
+    class A,B,C,D layer
+    class E command
+    class F,G field
+```
+
+**Don't just predict the flood. Understand the flood. Prioritise the people. Deploy the right resources. Prepare the relief network. And keep the response moving when infrastructure fails.**
+
+---
+
+<div align="center">
+
+## Team
+
+**ResQFlow**
+
+Built for the challenge:
+**PS3 — Disaster Response Intelligence Platform for flood prediction, emergency planning and resource allocation.**
+
+<br/>
+
+## Prototype Disclaimer
+
+ResQFlow is a research and operational-prototyping system. The current allocation and camp-forecasting components use deterministic heuristics and demo data rather than fully trained predictive models. The prototype does not currently include authentication, role management, real-time messaging, background workers, external alert ingestion or production-trained ML models.
+
+Production deployment would require domain-specific calibration, validated sensor ingestion, security controls, operational authorisation workflows, reliability testing and deployment hardening.
+
+<div align="center">
+
+<br/>
+
+<img src="https://img.shields.io/badge/Explainable-0F172A?style=for-the-badge&labelColor=0F172A&color=00D9A5"/>
+<img src="https://img.shields.io/badge/Spatial--First-0F172A?style=for-the-badge&labelColor=0F172A&color=8B5CF6"/>
+<img src="https://img.shields.io/badge/Fail%20Safe-0F172A?style=for-the-badge&labelColor=0F172A&color=F59E0B"/>
+<img src="https://img.shields.io/badge/Field%20Ready-0F172A?style=for-the-badge&labelColor=0F172A&color=EF4444"/>
+
+<h3>ResQFlow — Faster Signals. Smarter Decisions. Better Response.</h3>
+
+</div>
